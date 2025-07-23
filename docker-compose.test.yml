@@ -1,0 +1,16 @@
+version: '1'
+services:
+  app:
+    build: .
+    container_name: containerai-test
+    restart: unless-stopped
+    ports:
+      - "8000:8080" # Se expone el 8000 en el host y escucha en el 8080 del contenedor
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-test
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-test.conf:/etc/nginx/nginx.conf:ro

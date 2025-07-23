@@ -1,0 +1,7 @@
+version: '1'
+services:
+  app:
+    build: .
+    container_name: containerai-dev
+    ports:
+      - "8000:8080" # Se expone el 8000 en el host y escucha en el 8080 del contenedor

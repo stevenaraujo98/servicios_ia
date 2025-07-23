@@ -1,0 +1,18 @@
+version: '1'
+services:
+  app:
+    build: .
+    container_name: containerai-prod
+    restart: unless-stopped
+    ports:
+      - "8000:8080"
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-prod.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/etc/nginx/certs:ro
