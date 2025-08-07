@@ -43,13 +43,13 @@ sudo docker compose -f docker-compose.prod.yml up -d --build
 
 ### Down the containers compose kill all
 ```
-sudo docker compose down
-
 <!-- Por si no funciona solo down  -->
 sudo docker compose -f docker-compose.dev.yml down 
 
 <!-- Elimina tambien la imagen creada  -->
 sudo docker compose -f docker-compose.dev.yml down --rmi all 
+
+sudo docker compose down
 ```
 
 

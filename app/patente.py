@@ -3,7 +3,7 @@ import os
 from models.ModelLoader import crear_corpus, detect_language_and_translate
 from fastapi import HTTPException
 
-def predict_project_text(model_loader, model_folder, text, model_type='auto'):
+def predict_patent_text(model_loader, model_folder, text, model_type='auto'):
     """Predice etiquetas para textos individuales"""
     print(f"Procesamiento de texto para predicción con modelo: {model_folder}")
     print(f"   - Para el texto: {text[:75]}...")

@@ -3,7 +3,7 @@ import os
 from models.ModelLoader import crear_corpus, detect_language_and_translate
 from fastapi import HTTPException
 
-def predict_ods_text(model_loader, model_folder, text, model_type='auto'):
+def predict_carrera_text(model_loader, model_folder, text, model_type='auto'):
     """Predice etiquetas para textos individuales"""
     print(f"Procesamiento de texto para predicción con modelo: {model_folder}")
     print(f"   - Para el texto: {text[:75]}...")
@@ -32,12 +32,11 @@ def predict_ods_text(model_loader, model_folder, text, model_type='auto'):
     print(f" Ejecutando predicción ...")
     # Hacer prediccion del texto
     if model_type == 'traditional':
-        predictions, probabilities = model_loader.predict_traditional(model_folder, texts)
-        predictions = [predictions[0] - 1] # ya que solo es uno
+        predictions, probabilities, label_predictions = model_loader.predict_traditional(model_folder, texts)
     else:
-        predictions, probabilities = model_loader.predict_transformer(model_folder, texts)
+        predictions, probabilities, label_predictions = model_loader.predict_transformer(model_folder, texts)
     
-    prediction = predictions[0] + 1
+    prediction = label_predictions[predictions[0]] # texto de etiqueta y es un solo valor de predictions
     probability = probabilities[0][predictions[0]] if probabilities is not None else None
 
     # Mostrar resultados
@@ -49,18 +48,15 @@ def predict_ods_text(model_loader, model_folder, text, model_type='auto'):
             prob_str = f" (confianza: {max_prob:.3f})"
 
         print(f"   {i+1}. Texto: '{text[:75]}...'")
-        if model_type == 'traditional':
-            print(f"      Predicción: {pred}{prob_str}")
-        else:
-            print(f"      Predicción: {pred + 1}{prob_str}")
+        print(f"      Predicción: {pred}{prob_str} - Clase: {label_predictions[pred]}")
     
     # Obtener el top 3 de probabilidades y sus índices
-    top3_indices = []
+    top3_career = []
     top3_probs = []
     if probabilities is not None:
         for prob_list in probabilities:
             indices = np.argsort(prob_list)[-3:][::-1] # Ordena de menor a mayor, con el top 3 al final y -1 mayor a menor
-            top3_indices.append(indices.tolist()) # Convertir a lista la lista de índices
+            top3_career.append([label_predictions[i] for i in indices]) # Convertir a lista la lista de índices
             top3_probs.append([prob_list[i] for i in indices])  # obtener las probabilidades correspondientes
     
-    return int(prediction), float(probability), predictions, probabilities, top3_indices, top3_probs
+    return prediction, float(probability), label_predictions, probabilities, top3_career, top3_probs
