@@ -4,6 +4,21 @@ FastApi
 
 - enlace: https://fastapi.tiangolo.com/deployment/docker/#check-it
 
+## Estructura
+- app
+    - models
+        - ModelLoader.py: clase para carga de modelos tradicional y transformer
+        - carrera: modelos
+        - ods: modelos
+        - patente: modelos
+    - main.py: métodos apis
+    - consts.py: constantes
+    - modelsEntity.py: tipos de datos peticion y respuesta
+    - ods.py: metodo para uso del modelo
+    - patentes.py: metodos para uso del modelo
+    - carrera.py: metodos para uso del modelo
+    - validations.py: validaciones utiles
+
 ### Docker
 - Local
 ```

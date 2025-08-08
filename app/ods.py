@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from models.ModelLoader import crear_corpus, detect_language_and_translate
+from models.ModelLoader import crear_corpus, detect_language_and_translate_es_en
 from fastapi import HTTPException
 
 def predict_ods_text(model_loader, model_folder, text, model_type='auto'):
@@ -25,7 +25,7 @@ def predict_ods_text(model_loader, model_folder, text, model_type='auto'):
 
     # Lematizar y limpiar textos
     texts = [crear_corpus(text)]
-    texts, result_list = detect_language_and_translate(texts)
+    texts = detect_language_and_translate_es_en(texts) # Detectar idioma y traducir a ingles en caso este en español
 
     print(f"\\n🔮 Prediciendo {len(texts)} textos con modelo: {model_folder}")
 

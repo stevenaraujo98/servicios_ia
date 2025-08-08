@@ -33,7 +33,7 @@ loader_ods.load_transformer_model("distilbert_10e_24b_0") # Cashear el modelo pa
 print("Finalizó carga de modelos de transformadores...")
 
 print("Cargando modelos tradicionales...")
-loader_ods.load_traditional_model("Logistic_Regression_20250611_165546") # Cashear el modelo para evitar recargas innecesarias
+# loader_ods.load_traditional_model("Logistic_Regression_20250611_165546") # Cashear el modelo para evitar recargas innecesarias
 loader_patente.load_traditional_model("Random_Forest_20250708_144028") # Cashear el modelo para evitar recargas innecesarias
 loader_carrera.load_traditional_model("Random_Forest_20250804_100503") # Cashear el modelo para evitar recargas innecesarias
 print("Finalizó carga de modelos tradicionales...")
@@ -90,6 +90,7 @@ def predict_project(model_name: str, item: ItemContent, q: Union[str, None] = No
     validate_min_length(sample_text)
 
     prediction, probability, predictions, probabilities = predict_patent_text(loader_patente, model_name, sample_text)
+    probabilities = probabilities[0] if len(probabilities) > 0 else None  # Asegurar que las probabilidades sean una lista
     print(f"Prediction: {prediction} with probability: {probability}")
     print(f"Predictions: {predictions}")
     print(f"Probabilities: {probabilities}")

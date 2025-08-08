@@ -26,9 +26,14 @@ tokenizer_detected = AutoTokenizer.from_pretrained(model_ckpt)
 model_detected = AutoModelForSequenceClassification.from_pretrained(model_ckpt)
 
 # Traducción de español a inglés
-model_name = "Helsinki-NLP/opus-mt-es-en"
-tokenizer_tradu = MarianTokenizer.from_pretrained(model_name)
-model_tradu = MarianMTModel.from_pretrained(model_name)
+model_name_es_en = "Helsinki-NLP/opus-mt-es-en"
+tokenizer_tradu_es_en = MarianTokenizer.from_pretrained(model_name_es_en)
+model_tradu_es_en = MarianMTModel.from_pretrained(model_name_es_en)
+
+# Traduccion de inglés a español
+model_name_en_es = "Helsinki-NLP/opus-mt-en-es"
+tokenizer_tradu_en_es = MarianTokenizer.from_pretrained(model_name_en_es)
+model_tradu_en_es = MarianMTModel.from_pretrained(model_name_en_es)
 
 # Función de limpieza y lematización
 def procesar_texto(texto):
@@ -61,12 +66,11 @@ def crear_corpus(row):
 
 
 def get_translation_es_en(text):
-  translated = model_tradu.generate(**tokenizer_tradu(text, return_tensors="pt", padding=True))
-  return tokenizer_tradu.decode(translated[0], skip_special_tokens=True)
+  translated = model_tradu_es_en.generate(**tokenizer_tradu_es_en(text, return_tensors="pt", padding=True))
+  return tokenizer_tradu_es_en.decode(translated[0], skip_special_tokens=True)
 
-
-def detect_language_and_translate(list_text):
-    result_list = []
+def detect_language_and_translate_es_en(list_text):
+    result_list = [] # lista de textos con los idiomas
     inputs = tokenizer_detected(list_text, padding=True, truncation=True, return_tensors="pt")
     with torch.no_grad():
         logits = model_detected(**inputs).logits
@@ -86,7 +90,35 @@ def detect_language_and_translate(list_text):
         else:
             list_new_text.append(list_text[i])
     
-    return list_new_text, result_list
+    return list_new_text
+
+
+def get_translation_en_es(text):
+  translated = model_tradu_en_es.generate(**tokenizer_tradu_en_es(text, return_tensors="pt", padding=True))
+  return tokenizer_tradu_en_es.decode(translated[0], skip_special_tokens=True)
+
+def detect_language_and_translate_en_es(list_text):
+    result_list = [] # lista de textos con los idiomas
+    inputs = tokenizer_detected(list_text, padding=True, truncation=True, return_tensors="pt")
+    with torch.no_grad():
+        logits = model_detected(**inputs).logits
+
+    preds = torch.softmax(logits, dim=-1)
+    id2lang = model_detected.config.id2label
+    vals, idxs = torch.max(preds, dim=1)
+    result_list.extend([(id2lang[k.item()], v.item()) for k, v in zip(idxs, vals)])
+
+    list_new_text = []
+    for i in range(len(result_list)):
+        lang = result_list[i][0]
+        if lang == "en":
+            print(f"traduciendo el texto {i} de Inglés a Español")
+            resp = get_translation_en_es(list_text[i])
+            list_new_text.append(resp)
+        else:
+            list_new_text.append(list_text[i])
+    
+    return list_new_text
 
 
 class ModelLoader:
