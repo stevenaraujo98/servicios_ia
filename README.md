@@ -7,7 +7,7 @@ FastApi
 ## Estructura
 - app
     - models
-        - ModelLoader.py: clase para carga de modelos tradicional y transformer
+        - ModelLoader.py: clase para carga de modelos tradicional y transformer. Y cargar demas modelos como detección de idioma, traducción, y nlp
         - carrera: modelos
         - ods: modelos
         - patente: modelos
