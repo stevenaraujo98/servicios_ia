@@ -54,9 +54,9 @@ def predict_carrera_text(model_loader, model_folder, text, model_type='auto'):
     top3_career = []
     top3_probs = []
     if probabilities is not None:
-        for prob_list in probabilities:
-            indices = np.argsort(prob_list)[-3:][::-1] # Ordena de menor a mayor, con el top 3 al final y -1 mayor a menor
-            top3_career.append([label_predictions[i] for i in indices]) # Convertir a lista la lista de índices
-            top3_probs.append([prob_list[i] for i in indices])  # obtener las probabilidades correspondientes
-    
-    return prediction, float(probability), label_predictions, probabilities, top3_career, top3_probs
+        prob_list = probabilities[0]
+        indices = np.argsort(prob_list)[-3:][::-1] # Ordena de menor a mayor, con el top 3 al final y -1 mayor a menor
+        top3_careers = [label_predictions[i] for i in indices] # Convertir a lista la lista de índices
+        top3_probs = [prob_list[i] for i in indices]  # obtener las probabilidades correspondientes
+
+    return prediction, float(probability), label_predictions, probabilities, top3_careers, top3_probs

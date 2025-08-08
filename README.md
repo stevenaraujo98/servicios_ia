@@ -49,6 +49,7 @@ sudo docker compose -f docker-compose.dev.yml down
 <!-- Elimina tambien la imagen creada  -->
 sudo docker compose -f docker-compose.dev.yml down --rmi all 
 
+<!-- El down solo -->
 sudo docker compose down
 ```
 

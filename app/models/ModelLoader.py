@@ -96,6 +96,7 @@ class ModelLoader:
         self.models_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), tipo) # ruta absoluta al directorio de modelos
         self.loaded_models = {}
         self.tipo = tipo
+        print(f"ModelLoader initialized for type: {self.tipo} with models directory: {self.models_dir}")
   
     def load_traditional_model(self, model_folder):
         """Carga modelo tradicional"""

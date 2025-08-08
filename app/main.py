@@ -27,14 +27,14 @@ loader_patente = ModelLoader(tipo='patente')
 loader_carrera = ModelLoader(tipo='carrera')
 
 print("Cargando modelos de transformadores...")
-# loader_ods.load_transformer_model("distilbert_10e_24b_0") # Cashear el modelo para evitar recargas innecesarias
-# # loader_ods.load_transformer_model("bert_10e_24b") # Cashear el modelo para evitar recargas innecesarias
-loader_carrera.load_transformer_model("bert_20250806_234119") # Cashear el modelo para evitar recargas innecesarias
+loader_ods.load_transformer_model("distilbert_10e_24b_0") # Cashear el modelo para evitar recargas innecesarias
+# loader_ods.load_transformer_model("bert_10e_24b") # Cashear el modelo para evitar recargas innecesarias
+# loader_carrera.load_transformer_model("bert_20250806_234119") # Cashear el modelo para evitar recargas innecesarias
 print("Finalizó carga de modelos de transformadores...")
 
 print("Cargando modelos tradicionales...")
-# loader_ods.load_traditional_model("Logistic_Regression_20250611_165546") # Cashear el modelo para evitar recargas innecesarias
-# loader_patente.load_traditional_model("Random_Forest_20250708_144028") # Cashear el modelo para evitar recargas innecesarias
+loader_ods.load_traditional_model("Logistic_Regression_20250611_165546") # Cashear el modelo para evitar recargas innecesarias
+loader_patente.load_traditional_model("Random_Forest_20250708_144028") # Cashear el modelo para evitar recargas innecesarias
 loader_carrera.load_traditional_model("Random_Forest_20250804_100503") # Cashear el modelo para evitar recargas innecesarias
 print("Finalizó carga de modelos tradicionales...")
 
@@ -72,6 +72,7 @@ def predict_project(item: ItemModelContent, q: Union[str, None] = None):
     validate_min_length(sample_text)
 
     prediction, probability, predictions, probabilities = predict_patent_text(loader_patente, model_name, sample_text)
+    probabilities = probabilities[0] if len(probabilities) > 0 else None  # Asegurar que las probabilidades sean una lista
     print(f"Prediction: {prediction} with probability: {probability}")
     print(f"Predictions: {predictions}")
     print(f"Probabilities: {probabilities}")
@@ -181,15 +182,15 @@ def predict_carrera(item: ItemModelContent, q: Union[str, None] = None):
 
     sample_text = clean_text(item.content)
     # validate sample_text min limit_min
-    validate_min_length(sample_text)
+    validate_min_length(sample_text, min_length=10)
 
-    prediction, probability, class_label, probabilities, top3_career, top3_probs = predict_carrera_text(loader_carrera, model_name, sample_text)
+    prediction, probability, class_label, probabilities, top3_careers, top3_probs = predict_carrera_text(loader_carrera, model_name, sample_text)
     print(f"Prediction: {prediction} with probability: {probability}")
-    print(f"Probabilities: {probabilities}")
-    print(f"class_label: {class_label}")
-    print(f"Top 3 Indices: {top3_career}")
+    print(f"Probabilities: {len(probabilities)}")
+    print(f"class_label: {len(class_label)}")
+    print(f"Top 3 Carreras: {top3_careers}")
     print(f"Top 3 Probabilities: {top3_probs}")
-    return {"prediction": prediction, "probability": probability, "top3_career": top3_career, "top3_probs": top3_probs}
+    return {"prediction": prediction, "probability": probability, "top3_careers": top3_careers, "top3_probabilities": top3_probs}
 
 @app.post("/predict/carrera/{model_name}", response_model=PredictionResponseCareer)
 def predict_carrera(model_name: str, item: ItemContent, q: Union[str, None] = None):
@@ -199,12 +200,12 @@ def predict_carrera(model_name: str, item: ItemContent, q: Union[str, None] = No
 
     sample_text = clean_text(item.content)
     # validate sample_text min limit_min
-    validate_min_length(sample_text)
+    validate_min_length(sample_text, min_length=10)
 
-    prediction, probability, class_label, probabilities, top3_career, top3_probs = predict_carrera_text(loader_carrera, model_name, sample_text)
+    prediction, probability, class_label, probabilities, top3_careers, top3_probs = predict_carrera_text(loader_carrera, model_name, sample_text)
     print(f"Prediction: {prediction} with probability: {probability}")
-    print(f"Probabilities: {probabilities}")
-    print(f"class_label: {class_label}")
-    print(f"Top 3 Indices: {top3_career}")
+    print(f"Probabilities: {len(probabilities)}")
+    print(f"class_label: {len(class_label)}")
+    print(f"Top 3 Carreras: {top3_careers}")
     print(f"Top 3 Probabilities: {top3_probs}")
-    return {"prediction": prediction, "probability": probability, "top3_career": top3_career, "top3_probs": top3_probs}
+    return {"prediction": prediction, "probability": probability, "top3_careers": top3_careers, "top3_probabilities": top3_probs}
