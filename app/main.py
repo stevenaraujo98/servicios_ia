@@ -28,14 +28,15 @@ loader_carrera = ModelLoader(tipo='carrera')
 
 print("Cargando modelos de transformadores...")
 loader_ods.load_transformer_model("distilbert_10e_24b_0") # Cashear el modelo para evitar recargas innecesarias
-# loader_ods.load_transformer_model("bert_10e_24b") # Cashear el modelo para evitar recargas innecesarias
+# loader_patente.load_transformer_model("distilbert_20250710_0233") # Cashear el modelo para evitar recargas innecesarias
+# 1.2.2 de kaggle
 # loader_carrera.load_transformer_model("bert_20250806_234119") # Cashear el modelo para evitar recargas innecesarias
 print("Finalizó carga de modelos de transformadores...")
 
 print("Cargando modelos tradicionales...")
 # loader_ods.load_traditional_model("Logistic_Regression_20250611_165546") # Cashear el modelo para evitar recargas innecesarias
-loader_patente.load_traditional_model("Random_Forest_20250708_144028") # Cashear el modelo para evitar recargas innecesarias
-loader_carrera.load_traditional_model("Random_Forest_20250804_100503") # Cashear el modelo para evitar recargas innecesarias
+loader_patente.load_traditional_model("Random_Forest_20250813_144340") # Cashear el modelo para evitar recargas innecesarias
+loader_carrera.load_traditional_model("Random_Forest_20250808_161322") # Cashear el modelo para evitar recargas innecesarias
 print("Finalizó carga de modelos tradicionales...")
 
 @app.get("/")
