@@ -60,9 +60,13 @@ sudo docker compose -f docker-compose.prod.yml up -d --build
 ```
 <!-- Por si no funciona solo down  -->
 sudo docker compose -f docker-compose.dev.yml down 
+sudo docker compose -f docker-compose.test.yml down 
+sudo docker compose -f docker-compose.prod.yml down 
 
 <!-- Elimina tambien la imagen creada  -->
 sudo docker compose -f docker-compose.dev.yml down --rmi all 
+sudo docker compose -f docker-compose.test.yml down --rmi all 
+sudo docker compose -f docker-compose.prod.yml down --rmi all 
 
 <!-- El down solo -->
 sudo docker compose down
