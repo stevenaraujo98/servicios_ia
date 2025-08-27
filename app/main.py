@@ -1,12 +1,13 @@
 from typing import Union
 from validations import validate_min_length, validate_not_empty, clean_text
 from fastapi import FastAPI
-from ods import predict_ods_text
-from patente import predict_patent_text
-from carrera import predict_carrera_text
-from models.ModelLoader import ModelLoader
 from fastapi.middleware.cors import CORSMiddleware
-from modelsEntity import ItemContent, ItemModelContent, PredictionResponse, PredictionResponseODS, PredictionResponseCareer
+from projects.ods import predict_ods_text
+from projects.patente import predict_patent_text
+from projects.carrera import predict_carrera_text
+from projects.objetivo import calificate_objective
+from models.ModelLoader import ModelLoader
+from modelsEntity import ItemContent, ItemModelContent, PredictionResponse, PredictionResponseODS, PredictionResponseCareer, PredictionResponseClasificationObjective
 
 app = FastAPI()
 
@@ -211,3 +212,63 @@ def predict_carrera(model_name: str, item: ItemContent, q: Union[str, None] = No
     print(f"Top 3 Carreras: {top3_careers}")
     print(f"Top 3 Probabilities: {top3_probs}")
     return {"prediction": prediction, "probability": probability, "top3_careers": top3_careers, "top3_probabilities": top3_probs}
+
+
+
+# gemma3:12b, 4b, deepseek-r1:14b, 8b
+# Calificador Objetivo
+@app.get("/predict/objetivo/")
+def read_root():
+    objetivo = "Aumentar la satisfacción del cliente en un 15% para el tercer trimestre de 2025, implementando un nuevo sistema de soporte en línea y capacitando al equipo de atención al cliente."
+    print(f"Objective text: {objetivo[:100]}...")
+
+    model_name = "gemma3"
+    approved, verbs, detail, suggestions, suggestion_options = calificate_objective(model_name, objetivo)
+
+    print(f"Approved: {approved}")
+    print(f"Verbs: {verbs}")
+    print(f"Detail: {detail}")
+    print(f"Suggestions: {suggestions}")
+    print(f"Suggestion Options: {suggestion_options}")
+
+    return {"model_name": model_name, "approved": approved, "verbs": verbs, "detail": detail, "suggestions": suggestions, "suggestion_options": suggestion_options}
+
+@app.post("/predict/objetivo/", response_model=PredictionResponseClasificationObjective)
+def predict_objetivo(item: ItemModelContent, q: Union[str, None] = None):
+    if q:
+        print(f"Query parameter q: {q}")
+
+    model_name = item.model_name.strip()
+    validate_not_empty(model_name)
+
+    objetivo = clean_text(item.content)
+    # validate objetivo min limit_min
+    validate_min_length(objetivo, min_length=10)
+
+    approved, verbs, detail, suggestions, suggestion_options = calificate_objective(model_name, objetivo)
+
+    print(f"Approved: {approved}")
+    print(f"Verbs: {verbs}")
+    print(f"Detail: {detail}")
+    print(f"Suggestions: {suggestions}")
+    print(f"Suggestion Options: {suggestion_options}")
+    return {"approved": approved, "verbs": verbs, "detail": detail, "suggestions": suggestions, "suggestion_options": suggestion_options}
+
+@app.post("/predict/carrera/{model_name}", response_model=PredictionResponseClasificationObjective)
+def predict_carrera(model_name: str, item: ItemContent, q: Union[str, None] = None):
+    if q:
+        print(f"Query parameter q: {q}")
+    validate_not_empty(model_name)
+
+    objetivo = clean_text(item.content)
+    # validate objetivo min limit_min
+    validate_min_length(objetivo, min_length=10)
+
+    approved, verbs, detail, suggestions, suggestion_options = calificate_objective(model_name, objetivo)
+
+    print(f"Approved: {approved}")
+    print(f"Verbs: {verbs}")
+    print(f"Detail: {detail}")
+    print(f"Suggestions: {suggestions}")
+    print(f"Suggestion Options: {suggestion_options}")
+    return {"approved": approved, "verbs": verbs, "detail": detail, "suggestions": suggestions, "suggestion_options": suggestion_options}

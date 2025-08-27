@@ -54,3 +54,17 @@ class PredictionResponseCareer(BaseModel):
     probability: float | None = None
     top3_careers: list[str] | None = None
     top3_probabilities: list[float] | None = None
+
+"""
+    approved: booleano de si o no está aprobado
+    verbs: lista de los verbos mal utilizado
+    detail: Una explicación clara y concisa de por qué el objetivo fue aprobado o no. Si fue rechazado, especifica qué criterios fallaron.
+    suggestions: Una recomendación general sobre cómo mejorar el objetivo, incluso si fue aprobado.
+    suggestion_options: lista de 3 reescrituras completas y corregidas del objetivo.
+"""
+class PredictionResponseClasificationObjective(BaseModel):
+    approved: bool
+    verbs: list[str] | None = None
+    detail: str | None = None
+    suggestions: str | None = None
+    suggestion_options: list[str] | None = None
