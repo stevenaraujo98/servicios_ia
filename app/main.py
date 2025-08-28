@@ -42,7 +42,7 @@ print("Finalizó carga de modelos tradicionales...")
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"Hello": "IA"}
 
 
 
@@ -159,7 +159,7 @@ def predict_text(model_name: str, item: ItemContent, q: Union[str, None] = None)
 
 # CARRERA
 # @app.get("/predict/carrera/")
-# def read_root():
+# def read_carrera():
 #     sample_text = "Desarrollo de un prototipo de sistema para el seguimiento de contratos para la espol." # Computación
 #     print(f"Sample text: {sample_text[:100]}...")
 
@@ -215,23 +215,22 @@ def predict_carrera(model_name: str, item: ItemContent, q: Union[str, None] = No
 
 
 
-# gemma3:12b, 4b, deepseek-r1:14b, 8b
 # Calificador Objetivo
-@app.get("/predict/objetivo/")
-def read_root():
-    objetivo = "Aumentar la satisfacción del cliente en un 15% para el tercer trimestre de 2025, implementando un nuevo sistema de soporte en línea y capacitando al equipo de atención al cliente."
-    print(f"Objective text: {objetivo[:100]}...")
+# @app.get("/predict/objetivo/")
+# def read_objetivo():
+#     objetivo = "Aumentar la satisfacción del cliente en un 15% para el tercer trimestre de 2025, implementando un nuevo sistema de soporte en línea y capacitando al equipo de atención al cliente."
+#     print(f"Objective text: {objetivo[:100]}...")
 
-    model_name = "gemma3"
-    approved, verbs, detail, suggestions, suggestion_options = calificate_objective(model_name, objetivo)
+#     model_name = "gemma3"
+#     approved, verbs, detail, suggestions, suggestion_options = calificate_objective(model_name, objetivo)
 
-    print(f"Approved: {approved}")
-    print(f"Verbs: {verbs}")
-    print(f"Detail: {detail}")
-    print(f"Suggestions: {suggestions}")
-    print(f"Suggestion Options: {suggestion_options}")
+#     print(f"Approved: {approved}")
+#     print(f"Verbs: {verbs}")
+#     print(f"Detail: {detail}")
+#     print(f"Suggestions: {suggestions}")
+#     print(f"Suggestion Options: {suggestion_options}")
 
-    return {"model_name": model_name, "approved": approved, "verbs": verbs, "detail": detail, "suggestions": suggestions, "suggestion_options": suggestion_options}
+#     return {"model_name": model_name, "approved": approved, "verbs": verbs, "detail": detail, "suggestions": suggestions, "suggestion_options": suggestion_options}
 
 @app.post("/predict/objetivo/", response_model=PredictionResponseClasificationObjective)
 def predict_objetivo(item: ItemModelContent, q: Union[str, None] = None):
@@ -254,8 +253,8 @@ def predict_objetivo(item: ItemModelContent, q: Union[str, None] = None):
     print(f"Suggestion Options: {suggestion_options}")
     return {"approved": approved, "verbs": verbs, "detail": detail, "suggestions": suggestions, "suggestion_options": suggestion_options}
 
-@app.post("/predict/carrera/{model_name}", response_model=PredictionResponseClasificationObjective)
-def predict_carrera(model_name: str, item: ItemContent, q: Union[str, None] = None):
+@app.post("/predict/objetivo/{model_name}", response_model=PredictionResponseClasificationObjective)
+def predict_objetivo(model_name: str, item: ItemContent, q: Union[str, None] = None):
     if q:
         print(f"Query parameter q: {q}")
     validate_not_empty(model_name)

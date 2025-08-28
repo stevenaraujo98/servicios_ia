@@ -43,7 +43,7 @@ curl http://localhost
 
 ### Dev docker compose
 ```
-sudo docker compose -f docker-compose.dev.yml up -d --build
+docker compose -f docker-compose.dev.yml up -d --build
 ```
 
 ### Test docker compose
@@ -59,17 +59,25 @@ sudo docker compose -f docker-compose.prod.yml up -d --build
 ### Down the containers compose kill all
 ```
 <!-- Por si no funciona solo down  -->
-sudo docker compose -f docker-compose.dev.yml down 
+docker compose -f docker-compose.dev.yml down 
 sudo docker compose -f docker-compose.test.yml down 
 sudo docker compose -f docker-compose.prod.yml down 
 
 <!-- Elimina tambien la imagen creada  -->
-sudo docker compose -f docker-compose.dev.yml down --rmi all 
+docker compose -f docker-compose.dev.yml down --rmi all 
 sudo docker compose -f docker-compose.test.yml down --rmi all 
 sudo docker compose -f docker-compose.prod.yml down --rmi all 
 
+<!-- Elimina todo contenedor, imagen y volumen  -->
+docker compose -f docker-compose.dev.yml down --rmi all -v
+sudo docker compose -f docker-compose.test.yml down --rmi all -v
+sudo docker compose -f docker-compose.prod.yml down --rmi all -v
+
 <!-- El down solo -->
-sudo docker compose down
+docker compose down
+docker compose -f docker-compose.test.yml down -v
+<!-- Borrar solo volumen -->
+docker volume rm servicios_ia_ollama_data
 ```
 
 
@@ -141,3 +149,10 @@ curl http://localhost
 - Dockerfile
     CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"] 
     CMD ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "80"] 
+
+
+### Ollama
+Descargar modelos
+```
+docker exec ollama-dev ollama pull nombredelmodelo
+```

@@ -1,16 +1,45 @@
-version: '1'
+version: '3.8'
 services:
+  ollama:
+    build: 
+      context: .
+      dockerfile: Dockerfile.ollama
+    image: ollama/ollama
+    container_name: ollama-test
+    ports:
+      - "11434:11434"
+    volumes:
+      # Requieren declaración en la sección final "volumes:"" Persisten incluso si eliminas el contenedor, pero no si eliminas explícitamente el volumen
+      - ollama_data:/root/.ollama # se almacenan en un espacio gestionado por Docker, dentro del servicio (dice dónde montarlo)
+    # Descomenta la siguiente sección si tienes una GPU NVIDIA y NVIDIA Container Toolkit instalado
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
   app:
     build: .
     container_name: containerai-test
-    restart: unless-stopped
+    restart: unless-stopped # resilient against failures and automatically recover without manual intervention
     ports:
       - "8000:8080" # Se expone el 8000 en el host y escucha en el 8080 del contenedor
+    volumes:
+      # Monta el código de la aplicación para reflejar cambios sin tener que reconstruir la imagen (ideal para desarrollo)
+      - ./app:/code/app # Bind mounts Los datos persisten porque están en tu sistema de archivos local, los cambios se reflejan en ambos lugares
+    depends_on:
+      - ollama # nombre del servicio no del contenedor
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
   nginx:
     image: nginx:alpine
     container_name: nginx-test
-    restart: unless-stopped
+    restart: unless-stopped # resilient against failures and automatically recover without manual intervention
     ports:
       - "80:80"
     volumes:
       - ./nginx-test.conf:/etc/nginx/nginx.conf:ro
+
+volumes:
+  ollama_data:

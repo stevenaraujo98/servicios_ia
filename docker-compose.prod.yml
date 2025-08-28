@@ -1,11 +1,25 @@
-version: '1'
+version: '3.8'
 services:
+  ollama:
+    build: 
+      context: .
+      dockerfile: Dockerfile.ollama
+    image: ollama/ollama
+    container_name: ollama-dev
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
   app:
     build: .
     container_name: containerai-prod
     restart: unless-stopped
     ports:
       - "8000:8080"
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
   nginx:
     image: nginx:alpine
     container_name: nginx-prod
@@ -16,3 +30,6 @@ services:
     volumes:
       - ./nginx-prod.conf:/etc/nginx/nginx.conf:ro
       - ./certs:/etc/nginx/certs:ro
+
+volumes:
+  ollama_data:
