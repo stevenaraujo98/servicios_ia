@@ -110,6 +110,7 @@ sudo docker image ls
 sudo docker image rm ID
 <!-- Ver los volumenes -->
 sudo docker volume ls
+sudo docker volume rm ID
 
 <!-- Ver consola del contenedor ejecutandose -->
 <!-- Para salir de la consola del contenedor y volver a la terminal de tu host, escribe exit o presiona Ctrl + D -->
