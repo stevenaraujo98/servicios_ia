@@ -38,11 +38,23 @@ sudo docker ps
 curl http://localhost
 ```
 
-### Build and start
+### Build and start (para desarrollo es mejor)
 ```
 docker compose -f docker-compose.dev.yml up -d --build
 sudo docker compose -f docker-compose.test.yml up -d --build
 sudo docker compose -f docker-compose.prod.yml up -d --build
+```
+
+#### Para produccion mejor
+```
+docker compose -f docker-compose.dev.yml build
+docker compose -f docker-compose.dev.yml up -d
+
+sudo docker compose -f docker-compose.test.yml build
+sudo docker compose -f docker-compose.test.yml up -d
+
+sudo docker compose -f docker-compose.prod.yml build
+sudo docker compose -f docker-compose.prod.yml up -d
 ```
 
 ### Down the containers compose kill all
