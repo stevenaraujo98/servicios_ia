@@ -7,16 +7,17 @@ services:
       dockerfile: Dockerfile.ollama
     image: ollama/ollama
     container_name: ollama-prod
-    ports:
-      - "11434:11434"
+    restart: unless-stopped
+    # ports:
+      # - "11434:11434" # no exponerlo al exterior
     volumes:
       - ollama_data:/root/.ollama
   app:
     build: .
     container_name: containerai-prod
     restart: unless-stopped
-    ports:
-      - "8000:8080"
+    # ports:
+    #   - "8000:8080" # Nginx se encarga de la comunicación
     depends_on:
       - ollama
     environment:
@@ -31,6 +32,9 @@ services:
     volumes:
       - ./nginx-prod.conf:/etc/nginx/nginx.conf:ro
       - ./certs:/etc/nginx/certs:ro
+      - /etc/letsencrypt:/etc/nginx/certs:ro
+    depends_on: # asegurar que la app esté lista
+      - app
 
 volumes:
   ollama_data:
