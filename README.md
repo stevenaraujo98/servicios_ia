@@ -38,7 +38,7 @@ sudo docker ps
 curl http://localhost
 ```
 
-### docker compose
+### Build and start
 ```
 docker compose -f docker-compose.dev.yml up -d --build
 sudo docker compose -f docker-compose.test.yml up -d --build
@@ -68,6 +68,27 @@ docker compose down
 docker compose -f docker-compose.test.yml down -v
 <!-- Borrar solo volumen -->
 docker volume rm servicios_ia_ollama_data
+```
+
+### Restart reiniar containers detiene e inicia sin eliminar 
+```
+docker compose -f docker-compose.dev.yml restart
+sudo docker compose -f docker-compose.test.yml restart
+sudo docker compose -f docker-compose.prod.yml restart
+```
+
+### Stop containers sin eliminar los contenedores
+```
+docker compose -f docker-compose.dev.yml stop
+sudo docker compose -f docker-compose.test.yml stop
+sudo docker compose -f docker-compose.prod.yml stop
+```
+
+### Start again without build
+```
+docker compose -f docker-compose.dev.yml up -d
+sudo docker compose -f docker-compose.test.yml up -d
+sudo docker compose -f docker-compose.prod.yml up -d
 ```
 
 ### Para monitoreo de contenedores
@@ -113,7 +134,8 @@ sudo docker run -d --name containerai --restart unless-stopped -p 80:80 servicea
 ## Hosts:
 - Dev: http://localhost:8000
 - Test: http://192.168.10.37/
-- Prod: 
+- Prod: modelosia.espol.edu.ec 
+        200.10.147.97
 
 ## Consideraciones en linux
 ```
