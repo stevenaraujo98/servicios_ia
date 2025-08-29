@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile.ollama
     image: ollama/ollama
-    container_name: ollama-dev
+    container_name: ollama-prod
     ports:
       - "11434:11434"
     volumes:
