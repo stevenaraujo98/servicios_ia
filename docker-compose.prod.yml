@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   ollama:
     build: 
@@ -21,7 +20,7 @@ services:
     depends_on:
       - ollama
     environment:
-      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_HOST=http://ollama:11434 # funciona el puerto de manera interna
   nginx:
     image: nginx:alpine
     container_name: nginx-prod
@@ -30,9 +29,12 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      # Monta tu archivo de configuración de Nginx
       - ./nginx-prod.conf:/etc/nginx/nginx.conf:ro
+
+      # Monta tu carpeta local 'certs' en '/etc/nginx/certs' dentro del contenedor.
+      # El ':ro' significa "read-only" (solo lectura)
       - ./certs:/etc/nginx/certs:ro
-      - /etc/letsencrypt:/etc/nginx/certs:ro
     depends_on: # asegurar que la app esté lista
       - app
 

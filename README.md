@@ -4,6 +4,7 @@ FastApi
 - enlace: https://fastapi.tiangolo.com/deployment/docker/#check-it
 
 ## Estructura
+- certs
 - app
     - models
         - ModelLoader.py: clase para carga de modelos tradicional y transformer. Y cargar demas modelos como detección de idioma, traducción, y nlp
@@ -38,21 +39,19 @@ sudo docker ps
 curl http://localhost
 ```
 
-### Build and start (para desarrollo es mejor)
+### Build and start (para desarrollo o test es mejor)
 ```
 docker compose -f docker-compose.dev.yml up -d --build
 sudo docker compose -f docker-compose.test.yml up -d --build
-sudo docker compose -f docker-compose.prod.yml up -d --build
+```
+
+### Si se quiere asegurar el build por el compose
+```
+sudo docker-compose -f docker-compose.test.yml up -d --force-recreate
 ```
 
 #### Para produccion mejor
 ```
-docker compose -f docker-compose.dev.yml build
-docker compose -f docker-compose.dev.yml up -d
-
-sudo docker compose -f docker-compose.test.yml build
-sudo docker compose -f docker-compose.test.yml up -d
-
 sudo docker compose -f docker-compose.prod.yml build
 sudo docker compose -f docker-compose.prod.yml up -d
 ```
@@ -134,6 +133,9 @@ sudo docker exec -it ollama-test /bin/bash
 <!-- Detener el contenedor o el kill -->
 sudo docker stop containerai
 
+<!-- Reiniciar el contenedor
+sudo docker restart nginx-prod
+
 <!-- Eliminar contenedor -->
 sudo docker rm containerai
 
@@ -175,6 +177,8 @@ sudo docker run -d --name containerai --restart unless-stopped -p 80:80 servicea
 # 6. Verificar que esté funcionando
 sudo docker ps
 curl http://localhost
+curl https://modelosia.espol.edu.ec
+curl -v https://modelosia.espol.edu.ec
 ```
 
 ## APIS
@@ -191,7 +195,7 @@ curl http://localhost
     CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"] 
     CMD ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "80"] 
 
-#### Forma usada en Dockerfile
+### Forma usada en Dockerfile
     CMD ["fastapi", "run", "app/main.py", "--port", "8080", "--host", "0.0.0.0"]
 
 
@@ -214,4 +218,34 @@ RUN ollama serve & \
     ollama pull gemma3:12b && \
     # 4b
     ollama pull gemma3
+```
+
+## Consideracion adicional 
+##### DNS
+8.8.8.8 y 8.8.4.4 son los servidores DNS públicos de Google. Puedes usar otros como 1.1.1.1 (Cloudflare).
+```
+sudo nano /etc/docker/daemon.json
+
+{
+  "dns": ["192.168.1.17", "192.168.1.19"]
+}
+
+sudo systemctl restart docker
+```
+
+##### Certificados
+```
+cat dominio.crt validacion_CA.crt certification_Authority.crt > espol_bundle.crt
+
+cat espol_bundle.crt
+```
+
+```
+-----END CERTIFICATE-----   <-- Hay un salto de línea aquí
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----   <-- Y aquí también
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
 ```
