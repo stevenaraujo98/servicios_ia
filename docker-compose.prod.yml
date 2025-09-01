@@ -1,11 +1,11 @@
-version: '1'
+version: '3.8'
 services:
   app:
     build: .
     container_name: containerai-prod
     restart: unless-stopped
-    ports:
-      - "8000:8080"
+    # ports:
+    #   - "8000:8080" # Nginx se encarga de la comunicación
   nginx:
     image: nginx:alpine
     container_name: nginx-prod
@@ -14,5 +14,11 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      # Monta tu archivo de configuración de Nginx
       - ./nginx-prod.conf:/etc/nginx/nginx.conf:ro
+
+      # Monta tu carpeta local 'certs' en '/etc/nginx/certs' dentro del contenedor.
+      # El ':ro' significa "read-only" (solo lectura), una buena práctica de seguridad.
       - ./certs:/etc/nginx/certs:ro
+    depends_on: # asegurar que la app esté lista
+      - app
