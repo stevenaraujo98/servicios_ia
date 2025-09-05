@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from models.ModelLoader import crear_corpus, detect_language_and_translate_es_en
+from ..models.ModelLoader import crear_corpus, detect_language_and_translate_es_en
 from fastapi import HTTPException
 
 def predict_patent_text(model_loader, model_folder, text, model_type='auto'):

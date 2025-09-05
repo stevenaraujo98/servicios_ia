@@ -5,3 +5,4 @@ RUN ollama serve & \
     # ollama pull qwen3 && \
     # ollama pull gemma3:12b && \
     ollama pull gemma3
+    # ollama pull gemma3:270m

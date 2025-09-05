@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   ollama:
     build: 
@@ -24,11 +22,10 @@ services:
     build: .
     container_name: containerai-test
     restart: unless-stopped # resilient against failures and automatically recover without manual intervention
-    ports:
-      - "8000:8080" # Se expone el 8000 en el host y escucha en el 8080 del contenedor
-    volumes:
-      # Monta el código de la aplicación para reflejar cambios sin tener que reconstruir la imagen (ideal para desarrollo)
-      - ./app:/code/app # Bind mounts Los datos persisten porque están en tu sistema de archivos local, los cambios se reflejan en ambos lugares
+    # ports:
+    #   - "8000:8080" # Nginx se encarga
+    # volumes:
+    #   - ./app:/code/app # En test no edito no necesito actualizar en tiempo real como en dev
     depends_on:
       - ollama # nombre del servicio no del contenedor
     environment:

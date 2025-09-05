@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 """
     Clases para objeto de entrada y salida de las aplicaciones de FastAPI
@@ -13,11 +13,23 @@ class ItemContent(BaseModel):
     content: str | None = None
 
 """
+    Clase que extiende ItemContent para incluir los objetivos específicos
+"""
+class ItemContentObjectives(ItemContent):
+    specific_objectives: list[str]
+
+"""
     Clase que extiende ItemContent para incluir el nombre del modelo
     Esta clase se utiliza para enviar el nombre del modelo junto con el contenido
 """
 class ItemModelContent(ItemContent):
     model_name: str
+
+"""
+    Clase que extiende ItemModelContent para incluir los objetivos específicos
+"""
+class ItemModelContentObjectives(ItemModelContent):
+    specific_objectives: list[str]
 
 """
     prediction: etiqueta predicha
@@ -62,9 +74,49 @@ class PredictionResponseCareer(BaseModel):
     suggestions: Una recomendación general sobre cómo mejorar el objetivo, incluso si fue aprobado.
     suggestion_options: lista de 3 reescrituras completas y corregidas del objetivo.
 """
-class PredictionResponseClasificationObjective(BaseModel):
+class PredictionResponseClassificationObjective(BaseModel):
     approved: bool
     verbs: list[str] | None = None
     detail: str | None = None
     suggestions: str | None = None
     suggestion_options: list[str] | None = None
+
+
+    
+
+"""
+    Funciones para la evaluación conjunta de objetivos
+"""
+class JointEvaluation(BaseModel):
+    """Modelo para la sección 'evaluacion_conjunta'."""
+    alignment_approved: bool
+    alignment_detail: str
+    global_suggestion: str
+
+class PredictionClassificationObjective(BaseModel):
+    """
+    Modelo para la evaluación del objetivo general, basado en tu ejemplo.
+    """
+    approved: bool
+    verbs: list[str] | None
+    detail: str
+    suggestions: list[str] | str | None
+    suggestion_options: list[str] | None
+
+class SpecificObjectiveEvaluation(BaseModel):
+    """Modelo para cada uno de los objetivos específicos en la lista."""
+    objective: str
+    approved: bool
+    detail: str
+    suggestions: list[str] | str | None
+    suggestion_options: list[str] | None
+
+class IndividualEvaluation(BaseModel):
+    """Modelo para la sección 'evaluacion_individual'."""
+    general_objective: PredictionClassificationObjective
+    specific_objectives: list[SpecificObjectiveEvaluation]
+
+class FullEvaluationResponse(BaseModel):
+    """Modelo raíz que contiene la estructura completa de la respuesta."""
+    joint_evaluation: JointEvaluation# = Field(..., alias='evaluacion_conjunta') # la respuesta es con el alias
+    individual_evaluation: IndividualEvaluation# = Field(..., alias='evaluacion_individual')

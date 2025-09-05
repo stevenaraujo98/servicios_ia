@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from consts import limit_min
+from .consts import limit_min
 import string
 
 def clean_text(text: str) -> str:

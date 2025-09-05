@@ -1,13 +1,13 @@
 from typing import Union
-from validations import validate_min_length, validate_not_empty, clean_text
+from .validations import validate_min_length, validate_not_empty, clean_text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from projects.ods import predict_ods_text
-from projects.patente import predict_patent_text
-from projects.carrera import predict_carrera_text
-from projects.objetivo import calificate_objective
-from models.ModelLoader import ModelLoader
-from modelsEntity import ItemContent, ItemModelContent, PredictionResponse, PredictionResponseODS, PredictionResponseCareer, PredictionResponseClasificationObjective
+from .projects.ods import predict_ods_text
+from .projects.patente import predict_patent_text
+from .projects.carrera import predict_carrera_text
+from .projects.objetivo import calificate_objective, calificate_objectives_gen_esp
+from .models.ModelLoader import ModelLoader
+from .modelsEntity import ItemContent, ItemContentObjectives, ItemModelContent, ItemModelContentObjectives, PredictionResponse, PredictionResponseODS, PredictionResponseCareer, PredictionResponseClassificationObjective, FullEvaluationResponse
 
 app = FastAPI()
 
@@ -235,7 +235,7 @@ def predict_carrera(model_name: str, item: ItemContent, q: Union[str, None] = No
 
 #     return {"model_name": model_name, "approved": approved, "verbs": verbs, "detail": detail, "suggestions": suggestions, "suggestion_options": suggestion_options}
 
-@app.post("/predict/objetivo/", response_model=PredictionResponseClasificationObjective)
+@app.post("/predict/objetivo/", response_model=PredictionResponseClassificationObjective)
 def predict_objetivo(item: ItemModelContent, q: Union[str, None] = None):
     if q:
         print(f"Query parameter q: {q}")
@@ -256,7 +256,7 @@ def predict_objetivo(item: ItemModelContent, q: Union[str, None] = None):
     print(f"Suggestion Options: {suggestion_options}")
     return {"approved": approved, "verbs": verbs, "detail": detail, "suggestions": suggestions, "suggestion_options": suggestion_options}
 
-@app.post("/predict/objetivo/{model_name}", response_model=PredictionResponseClasificationObjective)
+@app.post("/predict/objetivo/{model_name}", response_model=PredictionResponseClassificationObjective)
 def predict_objetivo(model_name: str, item: ItemContent, q: Union[str, None] = None):
     if q:
         print(f"Query parameter q: {q}")
@@ -274,3 +274,89 @@ def predict_objetivo(model_name: str, item: ItemContent, q: Union[str, None] = N
     print(f"Suggestions: {suggestions}")
     print(f"Suggestion Options: {suggestion_options}")
     return {"approved": approved, "verbs": verbs, "detail": detail, "suggestions": suggestions, "suggestion_options": suggestion_options}
+
+
+
+# # Calificador Objetivos
+# @app.get("/predict/objetivos/")
+# def read_objetivos():
+#     objetivo = "Desarrollando un diseño que permita la visualización de la curva I-V de un panel PV mediante la implementación de un método práctico, programable, para que pueda ser replicado por estudiantes de pregrado."
+
+#     objetivos_especificos = [
+#         "Desarrollar un procedimiento para la determinación de la curva de operación I-V para la obtención de mediciones de forma automática.",
+#         "Diseñar un prototipo escalable basado en el método seleccionado para el trazador de curvas I-V",
+#         "Realizar las mediciones de corriente y voltaje de un panel PV que nos permitan la adquisición diferentes puntos de la curva."
+#     ]
+
+#     model_name = "gemma3"
+#     alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp(model_name, objetivo, objetivos_especificos)
+
+#     print(f"Approved: {alineacion_aprobada}")
+#     print(f"Detail: {evaluacion_conjunta['alignment_detail']}")
+#     print(f"Suggestion: {evaluacion_conjunta['global_suggestion']}")
+#     print(f"Verbs del objetivo general: {evaluacion_individual['general_objective']['verbs']}")
+
+#     response_data = {
+#         "joint_evaluation": evaluacion_conjunta,
+#         "individual_evaluation": evaluacion_individual
+#     }
+    
+#     return response_data
+
+@app.post("/predict/objetivos/", response_model=FullEvaluationResponse)
+def predict_objetivos(item: ItemModelContentObjectives, q: Union[str, None] = None):
+    if q:
+        print(f"Query parameter q: {q}")
+
+    model_name = item.model_name.strip()
+    validate_not_empty(model_name)
+
+    objetivo = clean_text(item.content)
+    # validate objetivo min limit_min
+    validate_min_length(objetivo, min_length=10)
+
+    objetivos_especificos = item.specific_objectives
+    if not objetivos_especificos or len(objetivos_especificos) < 3 or len(objetivos_especificos) > 4:
+        raise ValueError("La lista de objetivos específicos no puede estar vacía, tampoco menos de 3 ni más de 4.")
+
+    alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp(model_name, objetivo, objetivos_especificos)
+
+    print(f"Approved: {alineacion_aprobada}")
+    print(f"Detail: {evaluacion_conjunta['alignment_detail']}")
+    print(f"Suggestion: {evaluacion_conjunta['global_suggestion']}")
+    print(f"Verbs del objetivo general: {evaluacion_individual['general_objective']['verbs']}")
+
+    response_data = {
+        "joint_evaluation": evaluacion_conjunta,
+        "individual_evaluation": evaluacion_individual
+    }
+    
+    return response_data
+
+@app.post("/predict/objetivos/{model_name}", response_model=FullEvaluationResponse)
+def predict_objetivos(model_name: str, item: ItemContentObjectives, q: Union[str, None] = None):
+    if q:
+        print(f"Query parameter q: {q}")
+    validate_not_empty(model_name)
+
+    objetivo = clean_text(item.content)
+    # validate objetivo min limit_min
+    validate_min_length(objetivo, min_length=10)
+
+    objetivos_especificos = item.specific_objectives
+    if not objetivos_especificos or len(objetivos_especificos) < 3 or len(objetivos_especificos) > 4:
+        raise ValueError("La lista de objetivos específicos no puede estar vacía, tampoco menos de 3 ni más de 4.")
+
+    alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp(model_name, objetivo, objetivos_especificos)
+
+    print(f"Approved: {alineacion_aprobada}")
+    print(f"Detail: {evaluacion_conjunta['alignment_detail']}")
+    print(f"Suggestion: {evaluacion_conjunta['global_suggestion']}")
+    print(f"Verbs del objetivo general: {evaluacion_individual['general_objective']['verbs']}")
+    
+    response_data = {
+        "joint_evaluation": evaluacion_conjunta,
+        "individual_evaluation": evaluacion_individual
+    }
+    
+    return response_data

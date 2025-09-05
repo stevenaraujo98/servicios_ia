@@ -1,6 +1,6 @@
 import numpy as np
 import os
-from models.ModelLoader import crear_corpus, detect_language_and_translate_en_es
+from ..models.ModelLoader import crear_corpus, detect_language_and_translate_en_es
 from fastapi import HTTPException
 
 def predict_carrera_text(model_loader, model_folder, text, model_type='auto'):

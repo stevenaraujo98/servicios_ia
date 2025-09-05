@@ -1,19 +1,16 @@
-
 from transformers import (
     AutoTokenizer, AutoModelForSequenceClassification,
     MarianMTModel, MarianTokenizer
 )
+
 from nltk.corpus import stopwords
 import joblib
 import string
 import torch
 import spacy
-import json
-import nltk
 import os
 import re
 
-nltk.download('stopwords')
 nlp = spacy.load("en_core_web_lg")
 
 stopwords_es = set(stopwords.words('spanish'))

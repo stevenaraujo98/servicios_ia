@@ -39,7 +39,7 @@ sudo docker ps
 curl http://localhost
 ```
 
-### Build and start (para desarrollo o test es mejor)
+### reBuild and start (para desarrollo o test es mejor)
 ```
 docker compose -f docker-compose.dev.yml up -d --build
 sudo docker compose -f docker-compose.test.yml up -d --build

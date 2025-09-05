@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   ollama:
     build: 
@@ -32,6 +30,7 @@ services:
     depends_on:
       - ollama # nombre del servicio no del contenedor
     environment:
+      # - UVICORN_RELOAD=true # solo recarga en desarrollo
       - OLLAMA_HOST=http://ollama:11434
 
 # Declaración al final (solo dice que existe)
