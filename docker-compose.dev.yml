@@ -3,7 +3,7 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile.ollama
-    image: ollama/ollama
+    # image: ollama/ollama
     container_name: ollama-dev
     ports:
       - "11434:11434"
@@ -30,7 +30,7 @@ services:
     depends_on:
       - ollama # nombre del servicio no del contenedor
     environment:
-      # - UVICORN_RELOAD=true # solo recarga en desarrollo
+      # - UVICORN_RELOAD=true # solo recarga en tiempo real, en desarrollo
       - OLLAMA_HOST=http://ollama:11434
 
 # Declaración al final (solo dice que existe)

@@ -1,13 +1,21 @@
-from typing import Union
-from .validations import validate_min_length, validate_not_empty, clean_text
-from fastapi import FastAPI
+from typing import Union, Any
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from celery.result import AsyncResult
+
 from .projects.ods import predict_ods_text
 from .projects.patente import predict_patent_text
 from .projects.carrera import predict_carrera_text
 from .projects.objetivo import calificate_objective, calificate_objectives_gen_esp
+
+# --- Importaciones de tu proyecto ---
+from .validations import validate_min_length, validate_not_empty, clean_text
+from .modelsEntity import ItemContent, ItemContentObjectives, ItemModelContent, ItemModelContentObjectives, PredictionResponse, PredictionResponseODS, PredictionResponseCareer, PredictionResponseClassificationObjective, FullEvaluationResponse, TaskCreationResponse, TaskStatusResponse
 from .models.ModelLoader import ModelLoader
-from .modelsEntity import ItemContent, ItemContentObjectives, ItemModelContent, ItemModelContentObjectives, PredictionResponse, PredictionResponseODS, PredictionResponseCareer, PredictionResponseClassificationObjective, FullEvaluationResponse
+
+# --- Importaciones de Celery ---
+# Importamos la instancia de Celery y la tarea específica
+from .tasks import celery_app, run_objective_evaluation_task
 
 app = FastAPI()
 
@@ -299,8 +307,7 @@ def predict_objetivo(model_name: str, item: ItemContent, q: Union[str, None] = N
 #     response_data = {
 #         "joint_evaluation": evaluacion_conjunta,
 #         "individual_evaluation": evaluacion_individual
-#     }
-    
+#     }    
 #     return response_data
 
 @app.post("/predict/objetivos/", response_model=FullEvaluationResponse)
@@ -360,3 +367,62 @@ def predict_objetivos(model_name: str, item: ItemContentObjectives, q: Union[str
     }
     
     return response_data
+
+# --- ENDPOINT MODIFICADO ---
+# Este endpoint ahora INICIA la tarea y responde inmediatamente.
+@app.post("/predict/objetivos_async/", response_model=TaskCreationResponse, status_code=202)
+def predict_objetivos_async(item: ItemModelContentObjectives):
+    # 1. Validaciones (se mantienen igual)
+    model_name = item.model_name.strip()
+    validate_not_empty(model_name)
+
+    objetivo = clean_text(item.content)
+    validate_min_length(objetivo, min_length=10)
+
+    objetivos_especificos = item.specific_objectives
+    if not objetivos_especificos or len(objetivos_especificos) < 3 or len(objetivos_especificos) > 4:
+        raise HTTPException(status_code=400, detail="La lista de objetivos específicos debe contener entre 3 y 4 elementos.")
+
+    # 2. Iniciar la tarea en segundo plano
+    # En lugar de llamar a la función directamente, usamos .delay()
+    # Esto envía la tarea a la cola de RabbitMQ y no espera.
+    task = run_objective_evaluation_task.delay(
+        model_name, objetivo, objetivos_especificos
+    )
+
+    # 3. Responder inmediatamente con el ID de la tarea
+    return {"task_id": task.id, "status": "Processing"}
+
+# --- NUEVO ENDPOINT: Consultar estado de la tarea ---
+@app.get("/tasks/{task_id}/status", response_model=TaskStatusResponse)
+def get_task_status(task_id: str):
+    """Consulta el estado de una tarea de fondo."""
+    task_result = AsyncResult(task_id, app=celery_app)
+    
+    response_data = {
+        "task_id": task_id,
+        "status": task_result.status,
+        "result": None
+    }
+    
+    if task_result.successful():
+        response_data["result"] = task_result.get()
+    elif task_result.failed():
+        # Si falló, puedes optar por devolver el error
+        response_data["result"] = str(task_result.info) # 'info' contiene la excepción
+
+    return response_data
+
+# --- NUEVO ENDPOINT: Obtener resultado de la tarea (alternativa) ---
+@app.get("/tasks/{task_id}/result", response_model=FullEvaluationResponse)
+def get_task_result(task_id: str):
+    """Obtiene el resultado de una tarea completada."""
+    task_result = AsyncResult(task_id, app=celery_app)
+
+    if not task_result.ready():
+        raise HTTPException(status_code=202, detail="La tarea aún no ha finalizado.")
+    
+    if task_result.failed():
+        raise HTTPException(status_code=500, detail=f"La tarea falló: {task_result.info}")
+
+    return task_result.get()

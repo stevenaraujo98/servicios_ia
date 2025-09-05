@@ -1,15 +1,33 @@
 services:
+  # 1. El servicio del message broker (RabbitMQ)
+  rabbitmq:
+      image: rabbitmq:4.1.4-management-alpine # Imagen oficial con interfaz de gestión
+      container_name: 'rabbitmq-test'
+      ports:
+        - "5672:5672"   # Puerto para que la aplicación se comunique con RabbitMQ
+        - "15672:15672" # Puerto para acceder a la interfaz web de gestión de RabbitMQ
+      # volumes:
+      #   - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      #   - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+      volumes:
+        # Es más portable y manejable por Docker
+        - rabbitmq_data:/var/lib/rabbitmq/
+      networks:
+        - app-network
+  # 2. Servicio de Ollama
   ollama:
     build: 
       context: .
       dockerfile: Dockerfile.ollama
-    image: ollama/ollama
+    # image: ollama/ollama
     container_name: ollama-test
     ports:
       - "11434:11434"
     volumes:
       # Requieren declaración en la sección final "volumes:"" Persisten incluso si eliminas el contenedor, pero no si eliminas explícitamente el volumen
       - ollama_data:/root/.ollama # se almacenan en un espacio gestionado por Docker, dentro del servicio (dice dónde montarlo)
+    networks:
+      - app-network
     # Descomenta la siguiente sección si tienes una GPU NVIDIA y NVIDIA Container Toolkit instalado
     # deploy:
     #   resources:
@@ -18,6 +36,7 @@ services:
     #         - driver: nvidia
     #           count: all
     #           capabilities: [gpu]
+  # 3. Servicio de la aplicación (API fastAPI)
   app:
     build: .
     container_name: containerai-test
@@ -28,8 +47,35 @@ services:
     #   - ./app:/code/app # En test no edito no necesito actualizar en tiempo real como en dev
     depends_on:
       - ollama # nombre del servicio no del contenedor
+      - rabbitmq # inicie RabbitMQ antes que la app
     environment:
       - OLLAMA_HOST=http://ollama:11434
+    networks:
+      - app-network
+    # # --- AÑADIDO: HEALTHCHECK ---
+    # healthcheck:
+    #   # Comando que Docker ejecutará para comprobar la salud
+    #   test: ["CMD", "curl", "-f", "http://localhost:8080/docs"]
+    #   interval: 30s    # Comprobar cada 30 segundos
+    #   timeout: 10s     # Esperar 10 segundos por una respuesta
+    #   retries: 3       # Intentar 3 veces antes de marcar como "unhealthy"
+    #   start_period: 30s # Darle 30 segundos a la app para que arranque antes de la primera comprobación
+  # 4. El servicio del worker de Celery
+  worker:
+    build: . # Usa la misma imagen que la aplicación 'app'
+    container_name: 'celery_worker-test'
+    restart: unless-stopped
+    command: celery -A tasks.celery_app worker --loglevel=info
+    # El código se debe tomar de la imagen construida, no del host.
+    # Descomenta la siguiente línea solo para desarrollo:
+    # volumes:
+    #   - ./app:/code/app
+    depends_on:
+      - rabbitmq
+      - app
+    networks:
+      - app-network
+  # 5. Servicio de Nginx
   nginx:
     image: nginx:alpine
     container_name: nginx-test
@@ -38,6 +84,20 @@ services:
       - "80:80"
     volumes:
       - ./nginx-test.conf:/etc/nginx/nginx.conf:ro
+    # --- depends_on CON CONDICIÓN DE SALUD ACTIVADO ---
+    depends_on:
+      - app
+      # app:
+      #   condition: service_healthy # Espera hasta que el healthcheck de 'app' pase
+    networks:
+      - app-network
 
+# Define los volúmenes nombrados para persistencia de datos
 volumes:
   ollama_data:
+  rabbitmq_data:
+
+# Define la red compartida
+networks:
+  app-network:
+    driver: bridge

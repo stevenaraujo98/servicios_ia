@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import List, Dict, Any
 
 """
     Clases para objeto de entrada y salida de las aplicaciones de FastAPI
@@ -120,3 +121,17 @@ class FullEvaluationResponse(BaseModel):
     """Modelo raíz que contiene la estructura completa de la respuesta."""
     joint_evaluation: JointEvaluation# = Field(..., alias='evaluacion_conjunta') # la respuesta es con el alias
     individual_evaluation: IndividualEvaluation# = Field(..., alias='evaluacion_individual')
+
+
+
+# --- NUEVOS MODELOS PARA TAREAS ASÍNCRONAS ---
+class TaskCreationResponse(BaseModel):
+    """Respuesta al iniciar una nueva tarea."""
+    task_id: str
+    status: str
+
+class TaskStatusResponse(BaseModel):
+    """Respuesta al consultar el estado de una tarea."""
+    task_id: str
+    status: str
+    result: Any | None = None # El resultado estará aquí si la tarea ha finalizado
