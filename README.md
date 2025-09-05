@@ -45,7 +45,7 @@ docker compose -f docker-compose.dev.yml up -d --build
 sudo docker compose -f docker-compose.test.yml up -d --build
 ```
 
-### Si se quiere asegurar el build por el compose
+### Si se quiere asegurar el rebuild por el compose
 ```
 sudo docker-compose -f docker-compose.test.yml up -d --force-recreate
 ```
@@ -59,14 +59,14 @@ sudo docker compose -f docker-compose.prod.yml up -d
 ### Down the containers compose kill all
 ```
 <!-- Por si no funciona solo down  -->
-docker compose -f docker-compose.dev.yml down 
-sudo docker compose -f docker-compose.test.yml down 
-sudo docker compose -f docker-compose.prod.yml down 
+docker compose -f docker-compose.dev.yml down
+sudo docker compose -f docker-compose.test.yml down
+sudo docker compose -f docker-compose.prod.yml down
 
 <!-- Elimina tambien la imagen creada  -->
-docker compose -f docker-compose.dev.yml down --rmi all 
-sudo docker compose -f docker-compose.test.yml down --rmi all 
-sudo docker compose -f docker-compose.prod.yml down --rmi all 
+docker compose -f docker-compose.dev.yml down --rmi all
+sudo docker compose -f docker-compose.test.yml down --rmi all
+sudo docker compose -f docker-compose.prod.yml down --rmi all
 
 <!-- Elimina todo contenedor, imagen y volumen  -->
 docker compose -f docker-compose.dev.yml down --rmi all -v
