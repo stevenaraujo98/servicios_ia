@@ -65,7 +65,7 @@ services:
     build: . # Usa la misma imagen que la aplicación 'app'
     container_name: 'celery_worker-test'
     restart: unless-stopped
-    command: celery -A tasks.celery_app worker --loglevel=info
+    command: celery -A app.tasks.celery_app worker --loglevel=info # módulo 'tasks' dentro del paquete 'app'
     # El código se debe tomar de la imagen construida, no del host.
     # Descomenta la siguiente línea solo para desarrollo:
     # volumes:
@@ -73,6 +73,9 @@ services:
     depends_on:
       - rabbitmq
       - app
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
     networks:
       - app-network
   # 5. Servicio de Nginx
