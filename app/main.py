@@ -14,7 +14,6 @@ from .modelsEntity import ItemContent, ItemContentObjectives, ItemModelContent, 
 from .models.ModelLoader import ModelLoader
 
 # --- Importaciones de Celery ---
-# Importamos la instancia de Celery y la tarea específica
 from .tasks import celery_app, run_objective_evaluation_task
 
 app = FastAPI()
@@ -310,65 +309,67 @@ def predict_objetivo(model_name: str, item: ItemContent, q: Union[str, None] = N
 #     }    
 #     return response_data
 
-@app.post("/predict/objetivos/", response_model=FullEvaluationResponse)
-def predict_objetivos(item: ItemModelContentObjectives, q: Union[str, None] = None):
-    if q:
-        print(f"Query parameter q: {q}")
+# Tarda mucho la respuesta por eso objetivos_async
+# @app.post("/predict/objetivos/", response_model=FullEvaluationResponse)
+# def predict_objetivos(item: ItemModelContentObjectives, q: Union[str, None] = None):
+#     if q:
+#         print(f"Query parameter q: {q}")
 
-    model_name = item.model_name.strip()
-    validate_not_empty(model_name)
+#     model_name = item.model_name.strip()
+#     validate_not_empty(model_name)
 
-    objetivo = clean_text(item.content)
-    # validate objetivo min limit_min
-    validate_min_length(objetivo, min_length=10)
+#     objetivo = clean_text(item.content)
+#     # validate objetivo min limit_min
+#     validate_min_length(objetivo, min_length=10)
 
-    objetivos_especificos = item.specific_objectives
-    if not objetivos_especificos or len(objetivos_especificos) < 3 or len(objetivos_especificos) > 4:
-        raise ValueError("La lista de objetivos específicos no puede estar vacía, tampoco menos de 3 ni más de 4.")
+#     objetivos_especificos = item.specific_objectives
+#     if not objetivos_especificos or len(objetivos_especificos) < 3 or len(objetivos_especificos) > 4:
+#         raise ValueError("La lista de objetivos específicos no puede estar vacía, tampoco menos de 3 ni más de 4.")
 
-    alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp(model_name, objetivo, objetivos_especificos)
+#     alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp(model_name, objetivo, objetivos_especificos)
 
-    print(f"Approved: {alineacion_aprobada}")
-    print(f"Detail: {evaluacion_conjunta['alignment_detail']}")
-    print(f"Suggestion: {evaluacion_conjunta['global_suggestion']}")
-    print(f"Verbs del objetivo general: {evaluacion_individual['general_objective']['verbs']}")
+#     print(f"Approved: {alineacion_aprobada}")
+#     print(f"Detail: {evaluacion_conjunta['alignment_detail']}")
+#     print(f"Suggestion: {evaluacion_conjunta['global_suggestion']}")
+#     print(f"Verbs del objetivo general: {evaluacion_individual['general_objective']['verbs']}")
 
-    response_data = {
-        "joint_evaluation": evaluacion_conjunta,
-        "individual_evaluation": evaluacion_individual
-    }
+#     response_data = {
+#         "joint_evaluation": evaluacion_conjunta,
+#         "individual_evaluation": evaluacion_individual
+#     }
     
-    return response_data
+#     return response_data
 
-@app.post("/predict/objetivos/{model_name}", response_model=FullEvaluationResponse)
-def predict_objetivos(model_name: str, item: ItemContentObjectives, q: Union[str, None] = None):
-    if q:
-        print(f"Query parameter q: {q}")
-    validate_not_empty(model_name)
+# Tarda mucho la respuesta por eso objetivos_async
+# @app.post("/predict/objetivos/{model_name}", response_model=FullEvaluationResponse)
+# def predict_objetivos(model_name: str, item: ItemContentObjectives, q: Union[str, None] = None):
+#     if q:
+#         print(f"Query parameter q: {q}")
+#     validate_not_empty(model_name)
 
-    objetivo = clean_text(item.content)
-    # validate objetivo min limit_min
-    validate_min_length(objetivo, min_length=10)
+#     objetivo = clean_text(item.content)
+#     # validate objetivo min limit_min
+#     validate_min_length(objetivo, min_length=10)
 
-    objetivos_especificos = item.specific_objectives
-    if not objetivos_especificos or len(objetivos_especificos) < 3 or len(objetivos_especificos) > 4:
-        raise ValueError("La lista de objetivos específicos no puede estar vacía, tampoco menos de 3 ni más de 4.")
+#     objetivos_especificos = item.specific_objectives
+#     if not objetivos_especificos or len(objetivos_especificos) < 3 or len(objetivos_especificos) > 4:
+#         raise ValueError("La lista de objetivos específicos no puede estar vacía, tampoco menos de 3 ni más de 4.")
 
-    alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp(model_name, objetivo, objetivos_especificos)
+#     alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp(model_name, objetivo, objetivos_especificos)
 
-    print(f"Approved: {alineacion_aprobada}")
-    print(f"Detail: {evaluacion_conjunta['alignment_detail']}")
-    print(f"Suggestion: {evaluacion_conjunta['global_suggestion']}")
-    print(f"Verbs del objetivo general: {evaluacion_individual['general_objective']['verbs']}")
+#     print(f"Approved: {alineacion_aprobada}")
+#     print(f"Detail: {evaluacion_conjunta['alignment_detail']}")
+#     print(f"Suggestion: {evaluacion_conjunta['global_suggestion']}")
+#     print(f"Verbs del objetivo general: {evaluacion_individual['general_objective']['verbs']}")
     
-    response_data = {
-        "joint_evaluation": evaluacion_conjunta,
-        "individual_evaluation": evaluacion_individual
-    }
+#     response_data = {
+#         "joint_evaluation": evaluacion_conjunta,
+#         "individual_evaluation": evaluacion_individual
+#     }
     
-    return response_data
+#     return response_data
 
-# --- ENDPOINT MODIFICADO ---
+
 # Este endpoint ahora INICIA la tarea y responde inmediatamente.
 @app.post("/predict/objetivos_async/", response_model=TaskCreationResponse, status_code=202)
 def predict_objetivos_async(item: ItemModelContentObjectives):

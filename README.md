@@ -146,6 +146,22 @@ sudo docker build -t serviceai .
 sudo docker run -d --name containerai --restart unless-stopped -p 80:80 serviceai
 ```
 
+## RabbitMQ
+Para analizar la cola (contenedor del gestor rabbitmq)
+```
+sudo docker exec -it rabbitmq-test rabbitmqctl list_queues name messages messages_ready messages_unacknowledged
+sudo docker exec -it rabbitmq-prod rabbitmqctl list_queues name messages messages_ready messages_unacknowledged
+
+sudo docker exec -it rabbitmq-test rabbitmqctl list_queues messages messages_ready messages_unacknowledged
+sudo docker exec -it rabbitmq-prod rabbitmqctl list_queues messages messages_ready messages_unacknowledged
+```
+
+Ver el log del worker (contenedor del worker)
+```
+sudo docker logs -f celery_worker-test
+sudo docker logs -f celery_worker-prod
+```
+
 ## Hosts:
 - Dev: http://localhost:8000
 - Test: http://192.168.10.37/

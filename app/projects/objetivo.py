@@ -276,7 +276,7 @@ def calificate_objective(model_name, text):
 def calificate_objectives_gen_esp(model_name, general, especificos):
     print("Solicitud con modelo:", model_name)
     prompt_target = get_prompt_objetivos_gen_esp(general, especificos)
-    print("Prompt generado ...", prompt_target[-100:])
+    print("Prompt generado ...", prompt_target[-250:])
 
     response = request_chat(model=model_name, prompt=prompt_target)
     print("Respondio el modelo")
