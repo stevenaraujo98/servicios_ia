@@ -1,7 +1,9 @@
 # Servicion de Inteligencia Artificial
 
-FastApi
+FastAPI → API web (probablemente gestionando requests HTTP).
 - enlace: https://fastapi.tiangolo.com/deployment/docker/#check-it
+Docker → Aislamiento y despliegue.
+RabbitMQ + Celery → Manejo asincrónico de tareas largas (tu proceso ML de ~2 min).
 
 ## Estructura
 - certs
