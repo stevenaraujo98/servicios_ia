@@ -2,9 +2,9 @@ import os
 import numpy as np
 from typing import Union
 from fastapi import HTTPException, APIRouter
+from ..models.ModelLoader import ModelLoader, crear_corpus
 from ..modelsEntity import ItemContent, ItemModelContent, PredictionResponseCareer
 from ..validations import validate_min_length, validate_not_empty, clean_text
-from ..models.ModelLoader import ModelLoader, crear_corpus
 
 loader_carrera = ModelLoader(tipo='carrera')
 

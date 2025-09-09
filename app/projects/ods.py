@@ -2,8 +2,8 @@ import os
 import numpy as np
 from typing import Union
 from fastapi import HTTPException, APIRouter
-from ..modelsEntity import ItemContent, ItemModelContent, PredictionResponseODS
 from ..validations import validate_min_length, validate_not_empty, clean_text
+from ..modelsEntity import ItemContent, ItemModelContent, PredictionResponseODS
 from ..models.ModelLoader import ModelLoader, crear_corpus, detect_language_and_translate_es_en
 
 loader_ods = ModelLoader()

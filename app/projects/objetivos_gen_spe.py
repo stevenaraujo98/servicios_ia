@@ -1,5 +1,5 @@
-from ollama import chat
 import json
+from ollama import chat
 
 def request_chat(model, prompt="hola"):
     response = chat(
