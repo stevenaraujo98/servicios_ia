@@ -1,8 +1,11 @@
-from typing import Union, Any
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from celery.result import AsyncResult
+from contextlib import asynccontextmanager
+from typing import Union, Dict
+import asyncio
+import json
 
+# --- Projects ---
 from .projects.ods import predict_ods_text
 from .projects.patente import predict_patent_text
 from .projects.carrera import predict_carrera_text
@@ -12,11 +15,67 @@ from .projects.objetivo import calificate_objective, calificate_objectives_gen_e
 from .validations import validate_min_length, validate_not_empty, clean_text
 from .modelsEntity import ItemContent, ItemContentObjectives, ItemModelContent, ItemModelContentObjectives, PredictionResponse, PredictionResponseODS, PredictionResponseCareer, PredictionResponseClassificationObjective, FullEvaluationResponse, TaskCreationResponse, TaskStatusResponse
 from .models.ModelLoader import ModelLoader
+from .redis import ConnectionManager
 
-# --- Importaciones de Celery ---
+# --- Imports de Celery y Redis ---
+from celery.result import AsyncResult
+import redis.asyncio as redis # Usamos la versión asíncrona para FastAPI
+
+# --- Importaciones de Celery tasks ---
 from .tasks import celery_app, run_objective_evaluation_task
 
-app = FastAPI()
+# =================================================================
+# --- SECCIÓN DE WEBSOCKETS Y NOTIFICACIONES EN TIEMPO REAL ---
+# =================================================================
+manager = ConnectionManager()
+# Un diccionario para mapear qué cliente está suscrito a qué tarea.
+client_task_map: Dict[str, str] = {}
+
+# --- Listener de Redis ---
+async def redis_listener(pubsub):
+    print("[DIAGNÓSTICO] Listener de Redis iniciado y escuchando el canal 'task_results'...")
+    try:
+        async for message in pubsub.listen():
+            if message["type"] == "message":
+                data = json.loads(message["data"])
+                task_id = data.get("task_id")
+                print(f"[DIAGNÓSTICO] Mensaje recibido de Redis para la tarea: {task_id}")
+
+                client_id_to_notify = None
+                for cid, tid in client_task_map.items():
+                    if tid == task_id:
+                        client_id_to_notify = cid
+                        break
+                
+                if client_id_to_notify:
+                    print(f"[DIAGNÓSTICO] Intentando enviar resultado al cliente {client_id_to_notify}...")
+                    await manager.send_personal_message(json.dumps(data), client_id_to_notify)
+                    print(f"[DIAGNÓSTICO] Resultado enviado exitosamente.")
+                else:
+                    print(f"[DIAGNÓSTICO] No se encontró cliente suscrito a la tarea {task_id}.")
+    except asyncio.CancelledError:
+        print("[DIAGNÓSTICO] Listener de Redis cancelado.")
+    except Exception as e:
+        print(f"[DIAGNÓSTICO ERROR] El listener de Redis falló: {e}")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("[DIAGNÓSTICO] Iniciando lifespan de la aplicación...")
+    redis_client = redis.Redis(host='redis', port=6379, decode_responses=True)
+    pubsub = redis_client.pubsub()
+    await pubsub.subscribe("task_results")
+    listener_task = asyncio.create_task(redis_listener(pubsub))
+    print("[DIAGNÓSTICO] Tarea de listener de Redis creada.")
+    
+    yield
+    
+    print("[DIAGNÓSTICO] Apagando lifespan de la aplicación...")
+    listener_task.cancel()
+    await pubsub.close()
+    await redis_client.close()
+    print("[DIAGNÓSTICO] Listener y cliente de Redis cerrados correctamente.")
+
+app = FastAPI(title="API de Modelos IA", description="Endpoints para interactuar con los modelos de IA y Celery.", lifespan=lifespan)
 
 origins = [
     "*",
@@ -369,6 +428,41 @@ def predict_objetivo(model_name: str, item: ItemContent, q: Union[str, None] = N
     
 #     return response_data
 
+@app.on_event("startup")
+async def startup_event():
+    # Inicia el listener de Redis cuando la app arranca.
+    asyncio.create_task(redis_listener(manager))
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """Endpoint que maneja las conexiones WebSocket."""
+    await manager.connect(websocket)
+    try:
+        task_id = await websocket.receive_text()
+        manager.associate_task_id(task_id, websocket)
+        # Mantenemos la conexión abierta esperando la notificación del listener.
+        while True:
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        manager.disconnect_by_websocket(websocket)
+
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    await manager.connect(websocket, client_id)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            if message.get("type") == "subscribe":
+                task_id = message.get("task_id")
+                if task_id:
+                    client_task_map[client_id] = task_id
+                    print(f"[DIAGNÓSTICO] Cliente {client_id} suscrito a la tarea: {task_id}")
+                    await manager.send_personal_message(f"Suscrito exitosamente a la tarea {task_id}", client_id)
+    except WebSocketDisconnect:
+        manager.disconnect(client_id)
+        if client_id in client_task_map:
+            del client_task_map[client_id]
 
 # Este endpoint ahora INICIA la tarea y responde inmediatamente.
 @app.post("/predict/objetivos_async/", response_model=TaskCreationResponse, status_code=202)
@@ -394,7 +488,7 @@ def predict_objetivos_async(item: ItemModelContentObjectives):
     # 3. Responder inmediatamente con el ID de la tarea
     return {"task_id": task.id, "status": "Processing"}
 
-# --- NUEVO ENDPOINT: Consultar estado de la tarea ---
+# --- Consultar estado de la tarea ---
 @app.get("/tasks/{task_id}/status", response_model=TaskStatusResponse)
 def get_task_status(task_id: str):
     """Consulta el estado de una tarea de fondo."""
@@ -414,7 +508,7 @@ def get_task_status(task_id: str):
 
     return response_data
 
-# --- NUEVO ENDPOINT: Obtener resultado de la tarea (alternativa) ---
+# --- Obtener resultado de la tarea (alternativa) ---
 @app.get("/tasks/{task_id}/result", response_model=FullEvaluationResponse)
 def get_task_result(task_id: str):
     """Obtiene el resultado de una tarea completada."""
@@ -427,3 +521,8 @@ def get_task_result(task_id: str):
         raise HTTPException(status_code=500, detail=f"La tarea falló: {task_result.info}")
 
     return task_result.get()
+
+# --- Endpoint de Salud para el Healthcheck de Docker ---
+@app.get("/health", status_code=200)
+def health_check():
+    return {"status": "ok"}

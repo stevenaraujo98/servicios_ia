@@ -7,7 +7,7 @@ WORKDIR /code
 # build-essential es necesario para paquetes de Python que compilan código C/C++.
 # Combinamos los comandos para reducir el número de capas en la imagen.
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends build-essential curl && \
+    apt-get install -y --no-install-recommends build-essential curl redis-tools && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

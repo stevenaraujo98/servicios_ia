@@ -78,6 +78,14 @@ services:
       - OLLAMA_HOST=http://ollama:11434
     networks:
       - app-network
+    
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    restart: unless-stopped
+    networks:
+      - app-network
+      
   # 5. Servicio de Nginx
   nginx:
     image: nginx:alpine
