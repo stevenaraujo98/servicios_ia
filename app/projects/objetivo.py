@@ -1,9 +1,9 @@
-from ollama import chat
 import json
+from ollama import chat
 from typing import Union
 from fastapi import APIRouter
-from ..modelsEntity import ItemContent, ItemModelContent, PredictionResponseClassificationObjective
 from ..validations import validate_min_length, validate_not_empty, clean_text
+from ..modelsEntity import ItemContent, ItemModelContent, PredictionResponseClassificationObjective
 
 objetivo_router = APIRouter()
 
