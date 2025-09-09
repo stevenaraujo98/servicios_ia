@@ -1,16 +1,13 @@
 import redis
 import json
-from celery import Celery
-from .consts import BROKER_URL, RESULT_BACKEND
-from .projects.objetivo import calificate_objectives_gen_esp
-
-# Creamos la instancia de la aplicación Celery
-celery_app = Celery('tasks', broker=BROKER_URL, backend=RESULT_BACKEND)
+from ..projects.objetivos_gen_spe import calificate_objectives_gen_esp
+from .worker import celery_app
+from app.consts import REDIS_PORT
 
 # --- AÑADIDO: Conexión a Redis para publicar resultados ---
 # Usamos el nombre del servicio de Docker 'redis' como el host.
 # decode_responses=True es importante para que los mensajes sean strings.
-# redis_client = redis.Redis(host='redis', port=6379, db=0, decode_responses=True)
+# redis_client = redis.Redis(host='redis', port=REDIS_PORT, db=0, decode_responses=True)
 
 # --- Definición de la Tarea ---
 # El decorador @celery_app.task convierte esta función en una tarea de fondo.
@@ -49,7 +46,7 @@ def run_objective_evaluation_task(self, model_name: str, objetivo: str, objetivo
         print(f"[DIAGNÓSTICO] Worker: Attempting to publish result to Redis for task: {task_id}...")
         try:
             # BEST PRACTICE: Instantiate client inside the task
-            redis_client = redis.Redis(host='redis', port=6379, db=0)
+            redis_client = redis.Redis(host='redis', port=REDIS_PORT, db=0)
             
             # --- ¡PASO CLAVE! Publicar el resultado en el canal 'task_results' ---
             # El formato del mensaje es "task_id:resultado_en_json"
@@ -72,7 +69,7 @@ def run_objective_evaluation_task(self, model_name: str, objetivo: str, objetivo
         
         # Re-lanza la excepción para que Celery marque la tarea como fallida
         try:
-            redis_client = redis.Redis(host='redis', port=6379, db=0)
+            redis_client = redis.Redis(host='redis', port=REDIS_PORT, db=0)
             redis_client.publish('task_results', message)
             print(f"[DIAGNÓSTICO] Worker: FAILURE message published successfully to Redis.")
         except Exception as pub_e:

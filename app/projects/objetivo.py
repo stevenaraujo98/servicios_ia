@@ -2,6 +2,8 @@ import json
 from ollama import chat
 from typing import Union
 from fastapi import APIRouter
+
+# --- Importaciones de tu proyecto ---
 from ..validations import validate_min_length, validate_not_empty, clean_text
 from ..modelsEntity import ItemContent, ItemModelContent, PredictionResponseClassificationObjective
 
@@ -67,7 +69,7 @@ def calificate_objective(model_name, text):
 
 
 # Calificador Objetivo
-# @app.get("/predict/objetivo/")
+# @app.get("/")
 # def read_objetivo():
 #     objetivo = "Aumentar la satisfacción del cliente en un 15% para el tercer trimestre de 2025, implementando un nuevo sistema de soporte en línea y capacitando al equipo de atención al cliente."
 #     print(f"Objective text: {objetivo[:100]}...")

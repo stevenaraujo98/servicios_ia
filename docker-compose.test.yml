@@ -52,14 +52,6 @@ services:
       - OLLAMA_HOST=http://ollama:11434
     networks:
       - app-network
-    # # --- AÑADIDO: HEALTHCHECK ---
-    # healthcheck:
-    #   # Comando que Docker ejecutará para comprobar la salud
-    #   test: ["CMD", "curl", "-f", "http://localhost:8080/docs"]
-    #   interval: 30s    # Comprobar cada 30 segundos
-    #   timeout: 10s     # Esperar 10 segundos por una respuesta
-    #   retries: 3       # Intentar 3 veces antes de marcar como "unhealthy"
-    #   start_period: 30s # Darle 30 segundos a la app para que arranque antes de la primera comprobación
   # 4. El servicio del worker de Celery
   worker:
     build: . # Usa la misma imagen que la aplicación 'app'
@@ -81,7 +73,7 @@ services:
     
   redis:
     image: redis:7-alpine
-    container_name: redis-cache
+    container_name: redis-cache-test
     restart: unless-stopped
     networks:
       - app-network
@@ -98,8 +90,6 @@ services:
     # --- depends_on CON CONDICIÓN DE SALUD ACTIVADO ---
     depends_on:
       - app
-      # app:
-      #   condition: service_healthy # Espera hasta que el healthcheck de 'app' pase
     networks:
       - app-network
 

@@ -2,6 +2,8 @@ import os
 import numpy as np
 from typing import Union
 from fastapi import HTTPException, APIRouter
+
+# --- Importaciones de tu proyecto ---
 from ..modelsEntity import ItemContent, ItemModelContent, PredictionResponse
 from ..validations import validate_min_length, validate_not_empty, clean_text
 from ..models.ModelLoader import ModelLoader, crear_corpus, detect_language_and_translate_es_en
@@ -68,7 +70,7 @@ def predict_patent_text(model_loader, model_folder, text, model_type='auto'):
 
     return int(prediction), round(float(probability), 2) if probability is not None else None, predictions, probabilities
 
-# @app.get("/predict/patente/")
+# @app.get("/")
 # def read_project():
 #     sample_text = "METHOD FOR MANAGING INDOOR BEACON-BASED COMMUNICATION A method for content distribution in an indoor space and surrounding area covered by beacon signals. The method includes setting general data of the content, setting at least one location in the indoor space, including one or a combination of active/inactive locations and other relevant information available in a system, assigning beacons that trigger the content in the indoor space, receiving by the system, from a portable device via a first communication channel, beacon information that is received from a beacon by the portable device via a second communication channel, the first communication channel being different from the second communication channel, setting a singular event or plural events which initiates the content in the indoor space, setting a condition formula for the content which must be fulfilled to qualify for the content, and setting singular or plural results of the content that are provided when the condition formula is fulfilled."
 #     print(f"Sample text: {sample_text[:100]}...")

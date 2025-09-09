@@ -134,4 +134,4 @@ class TaskStatusResponse(BaseModel):
     """Respuesta al consultar el estado de una tarea."""
     task_id: str
     status: str
-    result: Any | None = None # El resultado estará aquí si la tarea ha finalizado
+    result: Any | None = None

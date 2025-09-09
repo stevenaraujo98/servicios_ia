@@ -2,6 +2,8 @@ import os
 import numpy as np
 from typing import Union
 from fastapi import HTTPException, APIRouter
+
+# --- Importaciones de tu proyecto ---
 from ..validations import validate_min_length, validate_not_empty, clean_text
 from ..modelsEntity import ItemContent, ItemModelContent, PredictionResponseODS
 from ..models.ModelLoader import ModelLoader, crear_corpus, detect_language_and_translate_es_en
@@ -81,7 +83,7 @@ def predict_ods_text(model_loader, model_folder, text, model_type='auto'):
     return int(prediction), float(probability), predictions, probabilities, top3_indices, top3_probs
 
 # ODS
-# @app.get("/predict/ods/")
+# @app.get("/")
 # def read_text():
 #     sample_text = "Food waste and food insecurity are pressing global challenges. This study presents a novel approach to optimizing the food bank network redesign (FBNR) by leveraging the Quito Metro system to create a decentralized food bank network. We propose positioning lockers at metro stations for convenient food donations, which are then transported using the metro’s spare capacity to designated stations for collection by charities. A blockchain-based traceability system with smart contracts serves as the core data management system, ensuring secure and transparent traceability of donations. Additionally, we develop a multi-objective optimization model aiming to minimize food waste, reduce transportation costs, and increase the social impact of food distribution. A mixed-integer linear programming (MIP) model further optimizes the allocation of donations to ensure efficient distribution. By integrating these models with the blockchain system, we offer a comprehensive solution to the FBNR, promoting a more sustainable and equitable food system."
 #     print(f"Sample text: {sample_text[:100]}...")

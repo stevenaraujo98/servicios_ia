@@ -2,6 +2,8 @@ import os
 import numpy as np
 from typing import Union
 from fastapi import HTTPException, APIRouter
+
+# --- Importaciones de tu proyecto ---
 from ..models.ModelLoader import ModelLoader, crear_corpus
 from ..modelsEntity import ItemContent, ItemModelContent, PredictionResponseCareer
 from ..validations import validate_min_length, validate_not_empty, clean_text
@@ -78,7 +80,7 @@ def predict_carrera_text(model_loader, model_folder, text, model_type='auto'):
     return prediction, float(probability), label_predictions, probabilities, top3_careers, top3_probs
 
 # CARRERA
-# @app.get("/predict/carrera/")
+# @app.get("/")
 # def read_carrera():
 #     sample_text = "Desarrollo de un prototipo de sistema para el seguimiento de contratos para la espol." # Computación
 #     print(f"Sample text: {sample_text[:100]}...")
