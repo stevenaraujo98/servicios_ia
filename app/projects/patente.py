@@ -10,8 +10,11 @@ loader_patente = ModelLoader(tipo='patente')
 
 # print("Cargando modelos de patente tradicionales...")
 # loader_patente.load_transformer_model("distilbert_20250710_0233") # Cashear el modelo para evitar recargas innecesarias
+# print("Finalizó carga de modelos de patente transformadores...")
+
 print("Cargando modelos de patente tradicionales...")
 loader_patente.load_traditional_model("Random_Forest_20250813_144340") # Cashear el modelo para evitar recargas innecesarias
+print("Finalizó carga de modelos de patente tradicionales...")
 
 patente_router = APIRouter()
 

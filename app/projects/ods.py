@@ -1,4 +1,3 @@
-from fastapi import HTTPException
 import os
 import numpy as np
 from typing import Union
@@ -11,8 +10,11 @@ loader_ods = ModelLoader()
 
 print("Cargando modelos de ods tradicionales...")
 loader_ods.load_transformer_model("distilbert_10e_24b_0") # Cashear el modelo para evitar recargas innecesarias
+print("Finalizó carga de modelos de ods transformadores...")
+
 # print("Cargando modelos de ods tradicionales...")
 # loader_ods.load_traditional_model("Logistic_Regression_20250611_165546") # Cashear el modelo para evitar recargas innecesarias
+# print("Finalizó carga de modelos de ods tradicionales...")
 
 ods_router = APIRouter()
 
