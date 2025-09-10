@@ -4,8 +4,8 @@ from typing import Union
 from fastapi import APIRouter
 
 # --- Importaciones de tu proyecto ---
-from ..validations import validate_min_length, validate_not_empty, clean_text
-from ..modelsEntity import ItemContent, ItemModelContent, PredictionResponseClassificationObjective
+from ...validations import validate_min_length, validate_not_empty, clean_text
+from ...entities import ItemContent, ItemModelContent, PredictionResponseClassificationObjective
 
 objetivo_router = APIRouter()
 

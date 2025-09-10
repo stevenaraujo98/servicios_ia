@@ -221,6 +221,7 @@ class ModelLoader:
         """Predicción con modelo tradicional"""
         print(f"🔍 Cargando modelo tradicional: {model_folder}")
         if model_folder not in self.loaded_models:
+            print("Modelo no encontrado en memoria, procediendo a cargarlo...")
             self.load_traditional_model(model_folder)
 
         model_data = self.loaded_models[model_folder]
@@ -264,6 +265,7 @@ class ModelLoader:
         print(f"🔍 Cargando modelo transformer: {model_folder}")
         """Predicción con modelo transformer"""
         if model_folder not in self.loaded_models:
+            print("Modelo no encontrado en memoria, procediendo a cargarlo...")
             self.load_transformer_model(model_folder)
 
         model_data = self.loaded_models[model_folder]

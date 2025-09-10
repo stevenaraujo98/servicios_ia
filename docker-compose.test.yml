@@ -57,7 +57,7 @@ services:
     build: . # Usa la misma imagen que la aplicación 'app'
     container_name: 'celery_worker-test'
     restart: unless-stopped
-    command: celery -A app.tasks.celery_app worker --loglevel=info # módulo 'tasks' dentro del paquete 'app'
+    command: celery -A app.celery.worker.celery_app worker --loglevel=info # módulo 'tasks' dentro del paquete 'app'
     # El código se debe tomar de la imagen construida, no del host.
     # Descomenta la siguiente línea solo para desarrollo:
     # volumes:
@@ -70,14 +70,12 @@ services:
       - OLLAMA_HOST=http://ollama:11434
     networks:
       - app-network
-    
   redis:
     image: redis:7-alpine
     container_name: redis-cache-test
     restart: unless-stopped
     networks:
       - app-network
-      
   # 5. Servicio de Nginx
   nginx:
     image: nginx:alpine
