@@ -23,4 +23,4 @@ result_backend = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB_INDEX}"
 # Se establece el tiempo en segundos. 7 días = 7 * 24 * 60 * 60 = 604800 segundos.
 result_expires = 604800
 
-stages = ["Processing", "confirmed", "shipped", "in transit", "arrived", "delivered"]
+stages = ["Processing", "SUCCESS", "FAILURE", "confirmed", "shipped", "in transit", "arrived", "delivered"]

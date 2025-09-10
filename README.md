@@ -111,7 +111,12 @@ sudo docker logs containerai-prod
 
 <!-- seguimiento en tiempo real -->
 sudo docker logs -f containerai-test
+sudo docker logs -f celery_worker-test
+sudo docker logs -f nginx-test
+
 sudo docker logs -f containerai-prod
+sudo docker logs -f celery_worker-prod
+sudo docker logs -f nginx-prod
 ```
 
 ### Para gestion de todo Docker
@@ -130,7 +135,7 @@ sudo docker volume rm ID
 sudo docker exec -it ollama-test /bin/bash
 ```
 
-### Para correr nuevamente
+### Para manipular contenedores 
 ```
 <!-- Detener el contenedor o el kill -->
 sudo docker stop containerai
@@ -162,6 +167,43 @@ Ver el log del worker (contenedor del worker)
 ```
 sudo docker logs -f celery_worker-test
 sudo docker logs -f celery_worker-prod
+```
+
+## Redis
+Para revisar procesos en tiempo real y bases de datos
+1. Revision de procesos
+```
+sudo docker exec -it redis-cache-test redis-cli MONITOR
+sudo docker exec -it redis-cache-test redis-cli SUBSCRIBE task_results
+```
+
+2. Para revisar bases de datos
+Empezar de dos formas
+```
+sudo docker exec -it redis-cache-test redis-cli
+
+o
+
+sudo docker exec -it redis-cache-test sh
+redis-cli
+```
+
+Para revisar la información exacta
+```
+<!-- Esto es porque en la base de datos 10  -->
+<!-- REDIS_CELERY_DB_INDEX=10, la 0 es para el socket  -->
+SELECT 10 
+
+<!-- Ver toda los datos -->
+KEYS * 
+
+<!-- Para ver el contenido -->
+GET "celery-task-meta-db2e8fce-2ede-404b-8453-1c62e554c848" 
+<!-- Para ver el tiempo que le resta a la información -->
+TTL"celery-task-meta-db2e8fce-2ede-404b-8453-1c62e554c848" 
+
+<!-- Salir de la consola -->
+EXIT 
 ```
 
 ## Hosts:

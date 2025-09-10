@@ -2,12 +2,7 @@ import redis
 import json
 from .worker import celery_app
 from app.projects.objetivos_gen_spec.logic import calificate_objectives_gen_esp
-from app.consts import REDIS_HOST, REDIS_PORT, REDIS_STORE_DB_INDEX
-
-# --- AÑADIDO: Conexión a Redis para publicar resultados ---
-# Usamos el nombre del servicio de Docker 'redis' como el host.
-# decode_responses=True es importante para que los mensajes sean strings.
-# redis_client = redis.Redis(host='redis', port=REDIS_PORT, db=0, decode_responses=True)
+from app.consts import REDIS_HOST, REDIS_PORT, REDIS_STORE_DB_INDEX, stages
 
 # --- Definición de la Tarea ---
 # El decorador @celery_app.task convierte esta función en una tarea de fondo.
@@ -20,14 +15,16 @@ def run_objective_evaluation_task(self, model_name: str, objetivo: str, objetivo
     task_id = self.request.id
     print(f"Worker: Iniciando evaluación para la tarea {task_id} con el modelo: {model_name}")
     
-    # BEST PRACTICE: Instanciamos el cliente una sola vez al inicio de la tarea
+    # Instanciamos el cliente una sola vez al inicio de la tarea
     redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_STORE_DB_INDEX)
 
     try:
+        print("[DIAGNÓSTICO] Worker: Ejecutando la función calificate_objectives_gen_esp")
         # Aquí se ejecuta tu función pesada. Puede tardar varios minutos.
         alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp(
             model_name, objetivo, objetivos_especificos
         )
+        print("[DIAGNÓSTICO] Worker: Culminó la función calificate_objectives_gen_esp")
 
         # El valor que retornas aquí es el que se guardará como resultado de la tarea.
         response_data = {
@@ -43,7 +40,7 @@ def run_objective_evaluation_task(self, model_name: str, objetivo: str, objetivo
         # Preparamos un payload JSON unificado para éxito.
         payload = json.dumps({
             "task_id": task_id,
-            "status": "SUCCESS",
+            "status": stages[1],
             "result": response_data
         })
 
@@ -62,7 +59,7 @@ def run_objective_evaluation_task(self, model_name: str, objetivo: str, objetivo
         # Preparamos un payload JSON unificado para fallos.
         error_payload = json.dumps({
             "task_id": task_id,
-            "status": "FAILURE",
+            "status": stages[2],
             "error": str(e)
         })
 
