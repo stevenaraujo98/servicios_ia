@@ -17,7 +17,7 @@ REDIS_STORE_DB_INDEX=0
 
 # El backend de resultados usa RPC, que también funciona sobre RabbitMQ.
 # Para producción a gran escala, se suele preferir Redis.
-# RESULT_BACKEND = "rpc://"
+# result_backend = "rpc://"
 result_backend = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB_INDEX}"
 
 # Se establece el tiempo en segundos. 7 días = 7 * 24 * 60 * 60 = 604800 segundos.
