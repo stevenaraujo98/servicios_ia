@@ -109,7 +109,7 @@ sudo docker compose -f docker-compose.prod.yml up -d
 sudo docker logs containerai-test
 sudo docker logs containerai-prod
 
-<!-- seguimiento en tiempo real -->
+<!-- SEGUIMIENTO en tiempo real -->
 sudo docker logs -f containerai-test
 sudo docker logs -f celery_worker-test
 sudo docker logs -f nginx-test
@@ -173,8 +173,12 @@ sudo docker logs -f celery_worker-prod
 Para revisar procesos en tiempo real y bases de datos
 1. Revision de procesos
 ```
+<!-- SEGUIMIENTO en tiempo real -->
 sudo docker exec -it redis-cache-test redis-cli MONITOR
 sudo docker exec -it redis-cache-test redis-cli SUBSCRIBE task_results
+
+sudo docker exec -it redis-cache-prof redis-cli MONITOR
+sudo docker exec -it redis-cache-prod redis-cli SUBSCRIBE task_results
 ```
 
 2. Para revisar bases de datos
