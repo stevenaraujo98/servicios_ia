@@ -60,7 +60,7 @@ def get_prompt_objetivos_gen_esp(objetivo, objetivos_especificos):
         \
         \
         ### FORMATO DE SALIDA Y REGLAS ###\
-        Tu respuesta DEBE ser exclusivamente un objeto JSON válido y nada más. No incluyas texto introductorio ni explicaciones fuera del JSON, tampoco incluyas en la explicacion de critero por A o B. La estructura será la siguiente:\
+        Tu respuesta DEBE ser exclusivamente un objeto JSON válido y nada más. No incluyas texto introductorio ni explicaciones fuera del JSON, tampoco menciones textualmente las letras A y B como items a cumplir. La estructura será la siguiente:\
         \
         - **`evaluacion_conjunta`**: Objeto con la evaluación de la alineación entre objetivos.\
             - **`alineacion_aprobada`**: "SI" o "NO". Marca "NO" si falla el criterio A1 o A2.\
