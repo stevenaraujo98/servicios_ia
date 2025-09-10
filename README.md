@@ -165,6 +165,7 @@ sudo docker exec -it rabbitmq-prod rabbitmqctl list_queues messages messages_rea
 
 Ver el log del worker (contenedor del worker)
 ```
+<!-- SEGUIMIENTO en tiempo real -->
 sudo docker logs -f celery_worker-test
 sudo docker logs -f celery_worker-prod
 ```
