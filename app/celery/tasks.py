@@ -2,7 +2,7 @@ import redis
 import json
 from .worker import celery_app
 from app.projects.objetivos_gen_spec.logic import calificate_objectives_gen_esp
-from app.consts import REDIS_HOST, REDIS_PORT, REDIS_STORE_DB_INDEX, stages
+from ..consts import REDIS_HOST, REDIS_PORT, REDIS_STORE_DB_INDEX, stages
 
 # --- Definición de la Tarea ---
 # El decorador @celery_app.task convierte esta función en una tarea de fondo.
