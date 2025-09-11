@@ -1,10 +1,12 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 
-# Importamos la tarea de Celery que crearemos en el siguiente paso
+# Importamos la tarea de Celery
 from app.celery.tasks import run_analisis_sentimiento_task
+
+# --- Importaciones de tu proyecto ---
 from app.consts import stages
 from app.entities import ItemContent, TaskCreationResponse
+from app.validations import validate_min_length, validate_not_empty, clean_text
 
 # --- Importaciones de Celery tasks ---
 from app.celery.tasks import celery_app
@@ -14,8 +16,8 @@ router_sentimiento = APIRouter()
 
 @router_sentimiento.post("/async", response_model=TaskCreationResponse, status_code=202)
 def predict_sentimiento_async(item: ItemContent):
-    if not item.texto_a_analizar or len(item.texto_a_analizar) < 5:
-        raise HTTPException(status_code=400, detail="El texto es demasiado corto.")
+    texto_a_analizar = clean_text(item.content)
+    validate_min_length(texto_a_analizar, min_length=10)
 
     # Iniciamos la nueva tarea en segundo plano
     task = run_analisis_sentimiento_task.delay(item.texto_a_analizar)

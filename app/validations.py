@@ -11,9 +11,11 @@ def clean_text(text: str) -> str:
     return cleaned_text.translate(str.maketrans('', '', string.punctuation))
 
 def validate_min_length(text: str, min_length: int = limit_min):
+    """Verifica el tamaño minimo del texto"""
     if len(text) < min_length:
         raise HTTPException(status_code=422, detail=f"El texto debe tener mínimo {min_length} caracteres.")
 
 def validate_not_empty(text: str):
+    """Verifica que el texto no este vacio"""
     if not text.strip():
         raise HTTPException(status_code=422, detail="El texto no puede estar vacío o contener solo espacios en blanco.")
