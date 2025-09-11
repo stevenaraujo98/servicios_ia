@@ -1,12 +1,13 @@
 import redis
 import json
 from .worker import celery_app
+from app.projects.analisis_sentimiento.logic import analizar_sentimiento_texto
 from app.projects.objetivos_gen_spec.logic import calificate_objectives_gen_esp
 from ..consts import REDIS_HOST, REDIS_PORT, REDIS_STORE_DB_INDEX, stages
 
 # --- Definición de la Tarea ---
 # El decorador @celery_app.task convierte esta función en una tarea de fondo.
-# 'bind=True' es crucial para poder acceder al 'self' de la tarea, que contiene el ID.
+# 'bind=True' para poder acceder al 'self' de la tarea, que contiene el ID.
 @celery_app.task(bind=True)
 def run_objective_evaluation_task(self, model_name: str, objetivo: str, objetivos_especificos: list):
     """
@@ -46,7 +47,7 @@ def run_objective_evaluation_task(self, model_name: str, objetivo: str, objetivo
 
         # Publicamos el resultado en el canal 'task_results'
         print(f"[DIAGNÓSTICO] Worker: Publicando resultado para la tarea: {task_id}...")
-        redis_client.publish("task_results", payload)
+        redis_client.publish("task_results", payload) # no guarda nada, solo envia la señal
         print(f"[DIAGNÓSTICO] Worker: Resultado publicado exitosamente en Redis.")
         
         # El return sigue siendo importante para que Celery guarde el resultado en el backend
@@ -71,4 +72,27 @@ def run_objective_evaluation_task(self, model_name: str, objetivo: str, objetivo
             print(f"[DIAGNÓSTICO ERROR] Worker: FALLÓ al publicar mensaje de error en Redis. Error: {pub_e}")
         
         # Re-lanzamos la excepción para que Celery marque la tarea como fallida
+        raise e
+
+@celery_app.task(bind=True)
+def run_analisis_sentimiento_task(self, texto: str):
+    """
+    Tarea de Celery que ejecuta el análisis de sentimiento en segundo plano.
+    """
+    task_id = self.request.id
+    print(f"Worker: Iniciando tarea de análisis de sentimiento {task_id}")
+
+    try:
+        # Llama a tu función de lógica pesada
+        resultado = analizar_sentimiento_texto(texto)
+
+        # (Opcional) Publica el resultado en Redis Pub/Sub para WebSockets
+        # ... (puedes replicar el patrón de tu otra tarea si necesitas notificaciones)
+
+        # Devuelve el resultado para que Celery lo guarde en el backend (Redis DB 10)
+        return resultado
+
+    except Exception as e:
+        print(f"Worker: Error en la tarea {task_id}: {e}")
+        # Re-lanza la excepción para que Celery marque la tarea como fallida
         raise e

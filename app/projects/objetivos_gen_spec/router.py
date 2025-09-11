@@ -6,7 +6,7 @@ from app.celery.tasks import run_objective_evaluation_task
 # --- Importaciones de tu proyecto ---
 from app.consts import stages
 from app.validations import validate_min_length, validate_not_empty, clean_text
-from app.entities import ItemModelContentObjectives, TaskCreationResponse, FullEvaluationResponse, TaskStatusResponse #, ItemContentObjectives, 
+from app.entities import ItemModelContentObjectives, TaskCreationResponse, FullEvaluationResponse#, ItemContentObjectives, 
 
 # --- Importaciones de Celery tasks ---
 from app.celery.tasks import celery_app
@@ -37,38 +37,6 @@ objetivo_gen_spe_router = APIRouter()
 #         "joint_evaluation": evaluacion_conjunta,
 #         "individual_evaluation": evaluacion_individual
 #     }    
-#     return response_data
-
-
-# Tarda mucho la respuesta por eso objetivos_async
-# @objetivo_gen_spe_router.post("/", response_model=FullEvaluationResponse)
-# def predict_objetivos(item: ItemModelContentObjectives, q: Union[str, None] = None):
-#     if q:
-#         print(f"Query parameter q: {q}")
-
-#     model_name = item.model_name.strip()
-#     validate_not_empty(model_name)
-
-#     objetivo = clean_text(item.content)
-#     # validate objetivo min limit_min
-#     validate_min_length(objetivo, min_length=10)
-
-#     objetivos_especificos = item.specific_objectives
-#     if not objetivos_especificos or len(objetivos_especificos) < 3 or len(objetivos_especificos) > 4:
-#         raise ValueError("La lista de objetivos específicos no puede estar vacía, tampoco menos de 3 ni más de 4.")
-
-#     alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp(model_name, objetivo, objetivos_especificos)
-
-#     print(f"Approved: {alineacion_aprobada}")
-#     print(f"Detail: {evaluacion_conjunta['alignment_detail']}")
-#     print(f"Suggestion: {evaluacion_conjunta['global_suggestion']}")
-#     print(f"Verbs del objetivo general: {evaluacion_individual['general_objective']['verbs']}")
-
-#     response_data = {
-#         "joint_evaluation": evaluacion_conjunta,
-#         "individual_evaluation": evaluacion_individual
-#     }
-    
 #     return response_data
 
 
@@ -125,7 +93,7 @@ def predict_objetivos_async(item: ItemModelContentObjectives):
     # 3. Responder inmediatamente con el ID de la tarea Processing
     return {"task_id": task.id, "status": stages[0]}
 
-# --- Obtener resultado de la tarea (alternativa) ---
+# --- Obtener resultado de la tarea ---
 @objetivo_gen_spe_router.get("/result/{task_id}", response_model=FullEvaluationResponse)
 def get_task_result(task_id: str):
     """Obtiene el resultado de una tarea completada."""
@@ -138,23 +106,3 @@ def get_task_result(task_id: str):
         raise HTTPException(status_code=500, detail=f"La tarea falló: {task_result.info}")
 
     return task_result.get()
-
-# --- Consultar estado de la tarea ---
-@objetivo_gen_spe_router.get("/status/{task_id}", response_model=TaskStatusResponse)
-def get_task_status(task_id: str):
-    """Consulta el estado de una tarea de fondo."""
-    task_result = AsyncResult(task_id, app=celery_app)
-    
-    response_data = {
-        "task_id": task_id,
-        "status": task_result.status,
-        "result": None
-    }
-    
-    if task_result.successful():
-        response_data["result"] = task_result.get()
-    elif task_result.failed():
-        # Si falló, puedes optar por devolver el error
-        response_data["result"] = str(task_result.info) # 'info' contiene la excepción
-
-    return response_data

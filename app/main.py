@@ -1,21 +1,28 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from typing import Dict
 import asyncio
 import json
-from .consts import REDIS_HOST, REDIS_PORT
+from .consts import REDIS_HOST, REDIS_PORT # , REDIS_STORE_DB_INDEX
 
 # --- Projects ---
 from .projects.ods.router import ods_router
 from .projects.patente.router import patente_router
 from .projects.carrera.router import carrera_router
 from .projects.objetivos.router import objetivo_router
+from .projects.analisis_sentimiento.router import router_sentimiento
 from .projects.objetivos_gen_spec.router import objetivo_gen_spe_router
 
 # --- Imports de Celery y Redis ---
 from .redis import ConnectionManager
 import redis.asyncio as redis # Versión asíncrona para FastAPI
+
+from .entities import TaskStatusResponse 
+
+# --- Importaciones de Celery tasks ---
+from .celery.tasks import celery_app
+from celery.result import AsyncResult
 
 # =================================================================
 # --- SECCIÓN DE WEBSOCKETS Y NOTIFICACIONES EN TIEMPO REAL ---
@@ -30,7 +37,6 @@ async def redis_listener(pubsub):
     try:
         async for message in pubsub.listen():
             if message["type"] == "message":
-                # --- ¡CAMBIO CLAVE! ---
                 # Ahora el mensaje es un JSON puro, lo decodificamos directamente.
                 data = json.loads(message["data"])
                 task_id = data.get("task_id")
@@ -58,6 +64,7 @@ async def redis_listener(pubsub):
 async def lifespan(app: FastAPI):
     print("[DIAGNÓSTICO] Iniciando lifespan de la aplicación...")
     # Usamos las constantes para la conexión
+    # si no se especifica un número de base de dato, por defecto es 0 (db=REDIS_STORE_DB_INDEX)
     redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
     pubsub = redis_client.pubsub()
     await pubsub.subscribe("task_results")
@@ -112,6 +119,9 @@ app.include_router(objetivo_router, prefix="/predict/objetivo", tags=["Objetivo"
 # Objetivos general y especifico
 app.include_router(objetivo_gen_spe_router, prefix="/predict/objetivos", tags=["Objetivos: general y específico"])
 
+# Analisis de sentimiento
+app.include_router(router_sentimiento, prefix="/predict/sentimiento", tags=["Análisis de Sentimiento"])
+
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await manager.connect(websocket, client_id)
@@ -129,3 +139,23 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
         manager.disconnect(client_id)
         if client_id in client_task_map:
             del client_task_map[client_id]
+
+# --- Consultar estado de cualquier tarea ---
+@objetivo_gen_spe_router.get("/status/{task_id}", response_model=TaskStatusResponse)
+def get_task_status(task_id: str):
+    """Consulta el estado de una tarea de fondo."""
+    task_result = AsyncResult(task_id, app=celery_app)
+    
+    response_data = {
+        "task_id": task_id,
+        "status": task_result.status,
+        "result": None
+    }
+    
+    if task_result.successful():
+        response_data["result"] = task_result.get()
+    elif task_result.failed():
+        # Si falló, puedes optar por devolver el error
+        response_data["result"] = str(task_result.info) # 'info' contiene la excepción
+
+    return response_data
