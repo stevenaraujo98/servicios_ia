@@ -20,7 +20,7 @@ def predict_sentimiento_async(item: ItemContent):
     validate_min_length(texto_a_analizar, min_length=10)
 
     # Iniciamos la nueva tarea en segundo plano
-    task = run_analisis_sentimiento_task.delay(item.texto_a_analizar)
+    task = run_analisis_sentimiento_task.delay(texto_a_analizar)
 
     # Respondemos inmediatamente con el ID de la tarea
     return {"task_id": task.id, "status": stages[0]}
