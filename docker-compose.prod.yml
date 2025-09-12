@@ -1,15 +1,42 @@
 services:
+  rabbitmq:
+    image: rabbitmq:4.1.4-management-alpine
+    container_name: 'rabbitmq-prod'
+    restart: unless-stopped
+    # No se exponen puertos al exterior en producción por seguridad.
+    # La interfaz de gestión puede exponerse si es necesario, pero con cuidado.
+    # ports:
+    #   - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+    networks:
+      - prod-network
+  worker:
+    build: . # Usa la misma imagen que 'app'
+    container_name: 'celery_worker-prod'
+    restart: unless-stopped
+    command: celery -A app.celery.worker.celery_app worker --loglevel=info
+    depends_on:
+      - rabbitmq
+      - app
+      - ollama
+      - redis
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    networks:
+      - prod-network
   ollama:
     build: 
       context: .
       dockerfile: Dockerfile.ollama
-    image: ollama/ollama
     container_name: ollama-prod
     restart: unless-stopped
     # ports:
       # - "11434:11434" # no exponerlo al exterior
     volumes:
-      - ollama_data:/root/.ollama
+      - ollama_data:/root/.ollama # Persisten los modelos si elimina el contenedor, pero no si elimina explícitamente el volumen
+    networks:
+      - prod-network
   app:
     build: .
     container_name: containerai-prod
@@ -18,8 +45,23 @@ services:
     #   - "8000:8080" # Nginx se encarga de la comunicación
     depends_on:
       - ollama
+      - rabbitmq
+      - redis
     environment:
       - OLLAMA_HOST=http://ollama:11434 # funciona el puerto de manera interna
+    networks:
+      - prod-network
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache-prod
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data # persistir la data de una semana en caso de reinicio
+    # No se expone el puerto en producción
+    networks:
+      - prod-network
+    # Opcional: Configurar Redis para persistencia AOF (Append Only File)
+    # command: redis-server --appendonly yes
   nginx:
     image: nginx:alpine
     container_name: nginx-prod
@@ -36,6 +78,15 @@ services:
       - ./certs:/etc/nginx/certs:ro
     depends_on: # asegurar que la app esté lista
       - app
+    networks:
+      - prod-network
 
 volumes:
   ollama_data:
+  rabbitmq_data:
+  redis_data:
+
+# Define la red compartida para producción
+networks:
+  prod-network:
+    driver: bridge

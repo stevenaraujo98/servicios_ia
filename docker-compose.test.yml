@@ -19,7 +19,7 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile.ollama
-    # image: ollama/ollama
+    # image: ollama/ollama # Es mejor usar la imagen que construyes en Dockerfile.ollama
     container_name: ollama-test
     ports:
       - "11434:11434"
@@ -57,7 +57,7 @@ services:
     build: . # Usa la misma imagen que la aplicación 'app'
     container_name: 'celery_worker-test'
     restart: unless-stopped
-    command: celery -A app.celery.worker.celery_app worker --loglevel=info # módulo 'tasks' dentro del paquete 'app'
+    command: celery -A app.celery.worker.celery_app worker --loglevel=info # módulo 'tasks' dentro del paquete 'app/celery/worker'
     # El código se debe tomar de la imagen construida, no del host.
     # Descomenta la siguiente línea solo para desarrollo:
     # volumes:
@@ -76,6 +76,9 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379" # Expone el puerto 6379 del contenedor al puerto 6379 de tu máquina
+    # Probar sistemas de caché que deben sobrevivir a un reinicio del servicio
+    volumes:
+      - redis_data:/data # verificar que Celery se guarda y persiste la data en la semana
     networks:
       - app-network
   # 5. Servicio de Nginx
@@ -97,6 +100,7 @@ services:
 volumes:
   ollama_data:
   rabbitmq_data:
+  redis_data:
 
 # Define la red compartida
 networks:
