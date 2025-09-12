@@ -70,6 +70,7 @@ services:
       - OLLAMA_HOST=http://ollama:11434
     networks:
       - app-network
+  # 5. Servicio de redis
   redis:
     image: redis:7-alpine
     container_name: redis-cache-test
@@ -81,7 +82,7 @@ services:
       - redis_data:/data # verificar que Celery se guarda y persiste la data en la semana
     networks:
       - app-network
-  # 5. Servicio de Nginx
+  # 6. Servicio de Nginx
   nginx:
     image: nginx:alpine
     container_name: nginx-test
