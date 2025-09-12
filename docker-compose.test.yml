@@ -91,7 +91,6 @@ services:
       - "80:80"
     volumes:
       - ./nginx-test.conf:/etc/nginx/nginx.conf:ro
-    # --- depends_on CON CONDICIÓN DE SALUD ACTIVADO ---
     depends_on:
       - app
     networks:
