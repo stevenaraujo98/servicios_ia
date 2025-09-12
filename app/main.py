@@ -80,7 +80,7 @@ async def lifespan(app: FastAPI):
     print("[DIAGNÓSTICO] Listener y cliente de Redis cerrados correctamente.")
 
 app = FastAPI(
-    title="API de Modelos IA", 
+    title="Modelos IA", 
     description="REST API y WebSocket para interactuar con los modelos de IA.", 
     lifespan=lifespan, 
     version="1.1.0",
