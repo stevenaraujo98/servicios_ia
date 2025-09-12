@@ -5,8 +5,8 @@ from app.celery.tasks import run_analisis_sentimiento_task
 
 # --- Importaciones de tu proyecto ---
 from app.consts import stages
-from app.entities import ItemContent, TaskCreationResponse
-from app.validations import validate_min_length, validate_not_empty, clean_text
+from app.entities import ItemContent, TaskCreationResponse, SentimentResponse
+from app.validations import validate_min_length, clean_text, validation_response_redis
 
 # --- Importaciones de Celery tasks ---
 from app.celery.tasks import celery_app
@@ -26,15 +26,9 @@ def predict_sentimiento_async(item: ItemContent):
     return {"task_id": task.id, "status": stages[0]}
 
 # --- Obtener resultado de la tarea ---
-@router_sentimiento.get("/result/{task_id}")#, response_model=FullEvaluationResponse)
+@router_sentimiento.get("/result/{task_id}", response_model=SentimentResponse)
 def get_task_result(task_id: str):
     """Obtiene el resultado de una tarea completada."""
     task_result = AsyncResult(task_id, app=celery_app)
 
-    if not task_result.ready():
-        raise HTTPException(status_code=202, detail="La tarea aún no ha finalizado.")
-    
-    if task_result.failed():
-        raise HTTPException(status_code=500, detail=f"La tarea falló: {task_result.info}")
-
-    return task_result.get()
+    return validation_response_redis(task_result, SentimentResponse)

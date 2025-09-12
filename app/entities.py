@@ -122,6 +122,9 @@ class FullEvaluationResponse(BaseModel):
     joint_evaluation: JointEvaluation# = Field(..., alias='evaluacion_conjunta') # la respuesta es con el alias
     individual_evaluation: IndividualEvaluation# = Field(..., alias='evaluacion_individual')
 
+class SentimentResponse(BaseModel):
+    sentiment: str
+    confidence: float
 
 
 # --- NUEVOS MODELOS PARA TAREAS ASÍNCRONAS ---

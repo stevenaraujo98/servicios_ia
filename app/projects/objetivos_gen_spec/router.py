@@ -5,7 +5,7 @@ from app.celery.tasks import run_objective_evaluation_task
 
 # --- Importaciones de tu proyecto ---
 from app.consts import stages
-from app.validations import validate_min_length, validate_not_empty, clean_text
+from app.validations import validate_min_length, validate_not_empty, clean_text, validation_response_redis
 from app.entities import ItemModelContentObjectives, TaskCreationResponse, FullEvaluationResponse#, ItemContentObjectives, 
 
 # --- Importaciones de Celery tasks ---
@@ -99,10 +99,4 @@ def get_task_result(task_id: str):
     """Obtiene el resultado de una tarea completada."""
     task_result = AsyncResult(task_id, app=celery_app)
 
-    if not task_result.ready():
-        raise HTTPException(status_code=202, detail="La tarea aún no ha finalizado.")
-    
-    if task_result.failed():
-        raise HTTPException(status_code=500, detail=f"La tarea falló: {task_result.info}")
-
-    return task_result.get()
+    return validation_response_redis(task_result, FullEvaluationResponse)

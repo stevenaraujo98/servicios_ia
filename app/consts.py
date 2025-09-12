@@ -24,3 +24,35 @@ result_backend = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB_INDEX}"
 result_expires = 604800
 
 stages = ["Processing", "SUCCESS", "FAILURE", "confirmed", "shipped", "in transit", "arrived", "delivered"]
+
+# tags auto-generado llamado "default"
+tags_metadata = [
+    {
+        "name": "Patente",
+        "description": "Predicciones relacionadas con patentes.",
+    },
+    {
+        "name": "ODS",
+        "description": "Clasificación de Objetivos de Desarrollo Sostenible.",
+    },
+    {
+        "name": "Carrera",
+        "description": "Predicción de carreras universitarias.",
+    },
+    {
+        "name": "Objetivo",
+        "description": "Clasificación de objetivos vinculados al proyecto.",
+    },
+    {
+        "name": "Objetivos: general y específicos",
+        "description": "Análisis de objetivos generales y específicos en los textos.",
+    },
+    {
+        "name": "Análisis de Sentimiento",
+        "description": "Clasificación de sentimientos (positivo, negativo, neutro).",
+    },
+    {
+        "name": "Default",
+        "description": "Endpoints básicos de la API (root, status, etc.)",
+    }
+]

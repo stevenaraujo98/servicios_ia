@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from typing import Dict
 import asyncio
 import json
-from .consts import REDIS_HOST, REDIS_PORT # , REDIS_STORE_DB_INDEX
+from .consts import tags_metadata, REDIS_HOST, REDIS_PORT # , REDIS_STORE_DB_INDEX
 
 # --- Projects ---
 from .projects.ods.router import ods_router
@@ -81,11 +81,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="API de Modelos IA", 
-    description="Endpoints para interactuar con los modelos de IA y Celery.", 
+    description="REST API y WebSocket para interactuar con los modelos de IA.", 
     lifespan=lifespan, 
-    version="1.0.0"
+    version="1.1.0",
+    openapi_tags=tags_metadata
 )
 
+# --- Middleware CORS ---
 origins = [
     "*",
     # "https://integradora.espol.edu.ec",
@@ -100,7 +102,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/", status_code=200)
+@app.get("/", tags=["Default"], status_code=200)
 def read_root():
     return {"Hello": "IA", "status": "ok"}
 
@@ -117,7 +119,7 @@ app.include_router(carrera_router, prefix="/predict/carrera", tags=["Carrera"])
 app.include_router(objetivo_router, prefix="/predict/objetivo", tags=["Objetivo"])
 
 # Objetivos general y especifico
-app.include_router(objetivo_gen_spe_router, prefix="/predict/objetivos", tags=["Objetivos: general y específico"])
+app.include_router(objetivo_gen_spe_router, prefix="/predict/objetivos", tags=["Objetivos: general y específicos"])
 
 # Analisis de sentimiento
 app.include_router(router_sentimiento, prefix="/predict/sentimiento", tags=["Análisis de Sentimiento"])
@@ -140,8 +142,9 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
         if client_id in client_task_map:
             del client_task_map[client_id]
 
-# --- Consultar estado de cualquier tarea ---
-@objetivo_gen_spe_router.get("/status/{task_id}", response_model=TaskStatusResponse)
+# --- Consultar estado de cualquier tarea --- 
+# tags auto-generado llamado "default"
+@app.get("/predict/status/{task_id}", tags=["Default"], response_model=TaskStatusResponse)
 def get_task_status(task_id: str):
     """Consulta el estado de una tarea de fondo."""
     task_result = AsyncResult(task_id, app=celery_app)
