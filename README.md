@@ -47,9 +47,10 @@ docker compose -f docker-compose.dev.yml up -d --build
 sudo docker compose -f docker-compose.test.yml up -d --build
 ```
 
-### Si se quiere asegurar el rebuild por el compose
+### Si se quiere asegurar el rebuild por el compose 
+Si cambia algo en los scripts o .env
 ```
-sudo docker-compose -f docker-compose.test.yml up -d --force-recreate
+sudo docker compose -f docker-compose.test.yml up -d --force-recreate
 ```
 
 #### Para produccion mejor
