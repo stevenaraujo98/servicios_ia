@@ -1,4 +1,7 @@
 from fastapi import APIRouter, HTTPException
+from typing import Union
+
+from .logic import calificate_objectives_gen_esp_simple
 
 # --- Importaciones de Celery tasks ---
 from app.celery.tasks import run_objective_evaluation_task
@@ -6,7 +9,7 @@ from app.celery.tasks import run_objective_evaluation_task
 # --- Importaciones de tu proyecto ---
 from app.consts import stages
 from app.validations import validate_min_length, validate_not_empty, clean_text, validation_response_redis
-from app.entities import ItemModelContentObjectives, TaskCreationResponse, FullEvaluationResponse#, ItemContentObjectives, 
+from app.entities import ItemModelContentObjectives, TaskCreationResponse, FullEvaluationResponse, ItemContentObjectives
 
 # --- Importaciones de Celery tasks ---
 from app.celery.tasks import celery_app
@@ -40,34 +43,63 @@ objetivo_gen_spe_router = APIRouter()
 #     return response_data
 
 
-# Tarda mucho la respuesta por eso objetivos_async
-# @objetivo_gen_spe_router.post("/{model_name}", response_model=FullEvaluationResponse)
-# def predict_objetivos(model_name: str, item: ItemContentObjectives, q: Union[str, None] = None):
-#     if q:
-#         print(f"Query parameter q: {q}")
-#     validate_not_empty(model_name)
+@objetivo_gen_spe_router.post("/", response_model=FullEvaluationResponse)
+def predict_objetivos(item: ItemModelContentObjectives, q: Union[str, None] = None):
+    if q:
+        print(f"Query parameter q: {q}")
 
-#     objetivo = clean_text(item.content)
-#     # validate objetivo min limit_min
-#     validate_min_length(objetivo, min_length=10)
+    model_name = item.model_name.strip()
+    validate_not_empty(model_name)
 
-#     objetivos_especificos = item.specific_objectives
-#     if not objetivos_especificos or len(objetivos_especificos) < 3 or len(objetivos_especificos) > 4:
-#         raise ValueError("La lista de objetivos específicos no puede estar vacía, tampoco menos de 3 ni más de 4.")
+    objetivo = clean_text(item.content)
+    # validate objetivo min limit_min
+    validate_min_length(objetivo, min_length=10)
 
-#     alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp(model_name, objetivo, objetivos_especificos)
+    objetivos_especificos = item.specific_objectives
+    if not objetivos_especificos or len(objetivos_especificos) < 3 or len(objetivos_especificos) > 4:
+        raise ValueError("La lista de objetivos específicos no puede estar vacía, tampoco menos de 3 ni más de 4.")
 
-#     print(f"Approved: {alineacion_aprobada}")
-#     print(f"Detail: {evaluacion_conjunta['alignment_detail']}")
-#     print(f"Suggestion: {evaluacion_conjunta['global_suggestion']}")
-#     print(f"Verbs del objetivo general: {evaluacion_individual['general_objective']['verbs']}")
+    alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp_simple(model_name, objetivo, objetivos_especificos)
+
+    print(f"Approved: {alineacion_aprobada}")
+    print(f"Detail: {evaluacion_conjunta['alignment_detail']}")
+    print(f"Suggestion: {evaluacion_conjunta['global_suggestion']}")
+    print(f"Verbs del objetivo general: {evaluacion_individual['general_objective']['verbs']}")
     
-#     response_data = {
-#         "joint_evaluation": evaluacion_conjunta,
-#         "individual_evaluation": evaluacion_individual
-#     }
+    response_data = {
+        "joint_evaluation": evaluacion_conjunta,
+        "individual_evaluation": evaluacion_individual
+    }
     
-#     return response_data
+    return response_data
+
+@objetivo_gen_spe_router.post("/{model_name}", response_model=FullEvaluationResponse)
+def predict_objetivos(model_name: str, item: ItemContentObjectives, q: Union[str, None] = None):
+    if q:
+        print(f"Query parameter q: {q}")
+    validate_not_empty(model_name)
+
+    objetivo = clean_text(item.content)
+    # validate objetivo min limit_min
+    validate_min_length(objetivo, min_length=10)
+
+    objetivos_especificos = item.specific_objectives
+    if not objetivos_especificos or len(objetivos_especificos) < 3 or len(objetivos_especificos) > 4:
+        raise ValueError("La lista de objetivos específicos no puede estar vacía, tampoco menos de 3 ni más de 4.")
+
+    alineacion_aprobada, evaluacion_conjunta, evaluacion_individual = calificate_objectives_gen_esp_simple(model_name, objetivo, objetivos_especificos)
+
+    print(f"Approved: {alineacion_aprobada}")
+    print(f"Detail: {evaluacion_conjunta['alignment_detail']}")
+    print(f"Suggestion: {evaluacion_conjunta['global_suggestion']}")
+    print(f"Verbs del objetivo general: {evaluacion_individual['general_objective']['verbs']}")
+    
+    response_data = {
+        "joint_evaluation": evaluacion_conjunta,
+        "individual_evaluation": evaluacion_individual
+    }
+    
+    return response_data
 
 # Este endpoint ahora INICIA la tarea y responde inmediatamente.
 @objetivo_gen_spe_router.post("/async", response_model=TaskCreationResponse, status_code=202)

@@ -1,7 +1,11 @@
-import json
+from app.consts import models_openRouter
+from dotenv import load_dotenv
 from ollama import chat
+import requests
+import json
+import os
 
-def request_chat(model, prompt="hola"):
+def request_ollama_chat(model, prompt="hola"):
     response = chat(
         model=model,
         messages=[
@@ -16,6 +20,34 @@ def request_chat(model, prompt="hola"):
     )
 
     return response.message.content
+
+def request_open_router_chat(model, prompt="What is the meaning of life?"):
+    load_dotenv()
+
+    response = requests.post(
+        url="https://openrouter.ai/api/v1/chat/completions",
+        headers={
+            "Authorization": "Bearer " + os.getenv("OPENROUTER_API_KEY"),
+            "Content-Type": "application/json",
+            "HTTP-Referer": os.getenv("HTTP_REFERER"), # Optional. Site URL for rankings on openrouter.ai.
+            "X-Title": os.getenv("X_TITLE"), # Optional. Site title for rankings on openrouter.ai.
+        },
+        data=json.dumps({
+            "model": model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        })
+    )
+
+    json_response = response.json()
+    print(json_response["id"], json_response["provider"], json_response["model"], json_response["created"])
+    print(json_response["usage"])
+
+    return json_response["choices"][0]["message"]["content"]
 
 def get_prompt_objetivos_gen_esp(objetivo, objetivos_especificos):
     objetivos_especificos = "; ".join([f'\"{obj}\" ' for obj in objetivos_especificos])
@@ -231,16 +263,8 @@ def get_prompt_objetivos_gen_esp(objetivo, objetivos_especificos):
         """{"objetivo_general": "' + objetivo + '",\
         "objetivos_especificos": [' + objetivos_especificos + ']}"""'
 
-def calificate_objectives_gen_esp(model_name, general, especificos):
-    print("Solicitud con modelo:", model_name)
-    prompt_target = get_prompt_objetivos_gen_esp(general, especificos)
-    print("Prompt generado ...", prompt_target[-400:])
-
-    response = request_chat(model=model_name, prompt=prompt_target)
-    print("Respondio el modelo")
-    only_json = response[response.find("{"):response.rfind("}") + 1]
-    print("JSON extraido:", only_json)
-
+def extract_json_from_response(only_json):
+    """ Extrae y estructura el JSON de la respuesta del modelo. """
     json_dict = json.loads(only_json)
 
     joint_evaluation = {}
@@ -265,5 +289,39 @@ def calificate_objectives_gen_esp(model_name, general, especificos):
         individual_evaluation["specific_objectives"][-1]["detail"] = i["detalle"]
         individual_evaluation["specific_objectives"][-1]["suggestions"] = i["sugerencias"]
         individual_evaluation["specific_objectives"][-1]["suggestion_options"] = i["opciones_de_sugerencias"]
+    
+    return joint_evaluation, individual_evaluation
+
+def calificate_objectives_gen_esp(model_name, general, especificos):
+    """ Versión usando ollama """
+    print("Solicitud con modelo:", model_name)
+    prompt_target = get_prompt_objetivos_gen_esp(general, especificos)
+    print("Prompt generado ...", prompt_target[-400:])
+
+    response = request_ollama_chat(model=model_name, prompt=prompt_target)
+    print("Respondio el modelo")
+    only_json = response[response.find("{"):response.rfind("}") + 1]
+    print("JSON extraido:", only_json)
+
+    joint_evaluation, individual_evaluation = extract_json_from_response(only_json)
+
+    return joint_evaluation["alignment_approved"], joint_evaluation, individual_evaluation
+
+def calificate_objectives_gen_esp_simple(model_name, general, especificos):
+    """ Versión simplificada usando OpenRouter.ai """
+    if model_name not in models_openRouter.keys():
+        raise ValueError(f"Modelo '{model_name}' no está disponible en OpenRouter.ai. Modelos disponibles: {list(models_openRouter.keys())}")
+    print("Solicitud con modelo:", model_name)
+    
+    prompt_target = get_prompt_objetivos_gen_esp(general, especificos)
+    print("Prompt generado ...", prompt_target[-400:])
+
+    content_response = request_open_router_chat(model=models_openRouter[model_name], prompt=prompt_target)
+    
+    print("Respondio el modelo")
+    only_json = content_response[content_response.find("{"):content_response.rfind("}") + 1]
+    print("JSON extraido:", only_json)
+
+    joint_evaluation, individual_evaluation = extract_json_from_response(only_json)
 
     return joint_evaluation["alignment_approved"], joint_evaluation, individual_evaluation

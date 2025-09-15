@@ -1,3 +1,14 @@
+# OpenRouter
+models_openRouter = {
+    "gpt_model": "openai/gpt-oss-20b:free",
+    "llama_model": "meta-llama/llama-3.3-70b-instruct:free",
+    "model_deepseek": "deepseek/deepseek-chat-v3.1:free",
+    "qwen_model": "qwen/qwen3-30b-a3b:free",
+    "gemma_2b": "google/gemma-3n-e2b-it:free",
+    "gemma_12_model": "google/gemma-3-12b-it:free",
+    "gemma_27_model": "google/gemma-3-27b-it:free",
+}
+
 limit_min = 50
 
 # --- Configuración RABBIT MQ ---
