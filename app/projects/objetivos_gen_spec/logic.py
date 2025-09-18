@@ -263,9 +263,37 @@ def get_prompt_objetivos_gen_esp(objetivo, objetivos_especificos):
         """{"objetivo_general": "' + objetivo + '",\
         "objetivos_especificos": [' + objetivos_especificos + ']}"""'
 
+def get_value_and_log_key(data_dict, possible_keys, expected_key, default_value=None):
+    """
+    Busca un valor en un diccionario probando una lista de claves.
+    Si encuentra una clave que no es la 'esperada', lo notifica.
+    """
+    if default_value is None:
+        default_value = [] # Asumimos que el valor por defecto más común será una lista vacía
+
+    for key in possible_keys:
+        if key in data_dict:
+            # Si la clave encontrada no es la que esperábamos, imprimimos un aviso.
+            if key != expected_key:
+                print(f"✅ AVISO: Se encontró la clave alternativa '{key}' en lugar de '{expected_key}'.")
+            
+            return data_dict[key] # Devuelve el valor encontrado
+    
+    # Si el bucle termina sin encontrar ninguna clave, devuelve el valor por defecto.
+    return default_value
+
 def extract_json_from_response(only_json):
     """ Extrae y estructura el JSON de la respuesta del modelo. """
     json_dict = json.loads(only_json)
+
+    # Define las claves que vas a buscar para las sugerencias
+    SUGGESTION_KEYS = [
+        "opciones_de_sugerencias", 
+        "opciones_de_reescritura", 
+        "opciones_de_escritura", 
+        "opciones_global"
+    ]
+    EXPECTED_KEY = "opciones_de_sugerencias"
 
     # --- Evaluación Conjunta ---
     eval_conjunta_data = json_dict.get("evaluacion_conjunta", {})
@@ -291,13 +319,7 @@ def extract_json_from_response(only_json):
         "detail": obj_general_data.get("detalle", ""),
         "suggestions": obj_general_data.get("sugerencias", ""),
         # Buscamos varias claves posibles para las opciones y si no, devolvemos una lista vacía
-        "suggestion_options": (
-            obj_general_data.get("opciones_de_sugerencias") or
-            obj_general_data.get("opciones_de_reescritura") or
-            obj_general_data.get("opciones_de_escritura") or
-            obj_general_data.get("opciones_global") or
-            []
-        )
+        "suggestion_options": get_value_and_log_key(obj_general_data, SUGGESTION_KEYS, EXPECTED_KEY)
     }
 
     # Objetivos Específicos
@@ -309,13 +331,7 @@ def extract_json_from_response(only_json):
             "detail": i.get("detalle", ""),
             "suggestions": i.get("sugerencias", ""),
             # Hacemos lo mismo para las opciones de sugerencias de los objetivos específicos
-            "suggestion_options": (
-                i.get("opciones_de_sugerencias") or
-                i.get("opciones_de_reescritura") or
-                i.get("opciones_de_escritura") or
-                i.get("opciones_global") or
-                []
-            )
+            "suggestion_options": get_value_and_log_key(i, SUGGESTION_KEYS, EXPECTED_KEY)
         }
         individual_evaluation["specific_objectives"].append(specific_objective)
     
