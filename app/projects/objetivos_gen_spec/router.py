@@ -73,7 +73,7 @@ def predict_objetivos(item: ItemModelContentObjectives, q: Union[str, None] = No
     
     return response_data
 
-@objetivo_gen_spe_router.post("/{model_name}", response_model=FullEvaluationResponse)
+@objetivo_gen_spe_router.post("/model_name/{model_name}", response_model=FullEvaluationResponse)
 def predict_objetivos(model_name: str, item: ItemContentObjectives, q: Union[str, None] = None):
     if q:
         print(f"Query parameter q: {q}")
