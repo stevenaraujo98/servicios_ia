@@ -267,28 +267,57 @@ def extract_json_from_response(only_json):
     """ Extrae y estructura el JSON de la respuesta del modelo. """
     json_dict = json.loads(only_json)
 
-    joint_evaluation = {}
-    joint_evaluation["alignment_approved"] = True if json_dict["evaluacion_conjunta"]["alineacion_aprobada"] == "SI" else False
-    joint_evaluation["alignment_detail"] = json_dict["evaluacion_conjunta"]["detalle_alineacion"]
-    joint_evaluation["global_suggestion"] = json_dict["evaluacion_conjunta"]["sugerencia_global"]
+    # --- Evaluación Conjunta ---
+    eval_conjunta_data = json_dict.get("evaluacion_conjunta", {})
+    joint_evaluation = {
+        "alignment_approved": eval_conjunta_data.get("alineacion_aprobada") == "SI",
+        "alignment_detail": eval_conjunta_data.get("detalle_alineacion", ""),
+        "global_suggestion": eval_conjunta_data.get("sugerencia_global", "")
+    }
+    
+    # --- Evaluación Individual ---
+    individual_evaluation = {
+        "general_objective": {},
+        "specific_objectives": []
+    }
 
-    individual_evaluation = {}
-    individual_evaluation["general_objective"] = {}
-    individual_evaluation["specific_objectives"] = []
+    eval_individual_data = json_dict.get("evaluacion_individual", {})
+    
+    # Objetivo General
+    obj_general_data = eval_individual_data.get("objetivo_general", {})
+    individual_evaluation["general_objective"] = {
+        "approved": obj_general_data.get("aprobado") == "SI",
+        "verbs": obj_general_data.get("verbos", []),
+        "detail": obj_general_data.get("detalle", ""),
+        "suggestions": obj_general_data.get("sugerencias", ""),
+        # Buscamos varias claves posibles para las opciones y si no, devolvemos una lista vacía
+        "suggestion_options": (
+            obj_general_data.get("opciones_de_sugerencias") or
+            obj_general_data.get("opciones_de_reescritura") or
+            obj_general_data.get("opciones_de_escritura") or
+            obj_general_data.get("opciones_global") or
+            []
+        )
+    }
 
-    individual_evaluation["general_objective"]["approved"] = True if json_dict["evaluacion_individual"]["objetivo_general"]["aprobado"] == "SI" else False
-    individual_evaluation["general_objective"]["verbs"] = json_dict["evaluacion_individual"]["objetivo_general"]["verbos"]
-    individual_evaluation["general_objective"]["detail"] = json_dict["evaluacion_individual"]["objetivo_general"]["detalle"]
-    individual_evaluation["general_objective"]["suggestions"] = json_dict["evaluacion_individual"]["objetivo_general"]["sugerencias"]
-    individual_evaluation["general_objective"]["suggestion_options"] = json_dict["evaluacion_individual"]["objetivo_general"]["opciones_de_sugerencias"]
-
-    for i in json_dict["evaluacion_individual"]["objetivos_especificos"]:
-        individual_evaluation["specific_objectives"].append({})
-        individual_evaluation["specific_objectives"][-1]["objective"] = i["objetivo"]
-        individual_evaluation["specific_objectives"][-1]["approved"] = True if i["aprobado"] == "SI" else False
-        individual_evaluation["specific_objectives"][-1]["detail"] = i["detalle"]
-        individual_evaluation["specific_objectives"][-1]["suggestions"] = i["sugerencias"]
-        individual_evaluation["specific_objectives"][-1]["suggestion_options"] = i["opciones_de_sugerencias"]
+    # Objetivos Específicos
+    obj_especificos_data = eval_individual_data.get("objetivos_especificos", [])
+    for i in obj_especificos_data:
+        specific_objective = {
+            "objective": i.get("objetivo", ""),
+            "approved": i.get("aprobado") == "SI",
+            "detail": i.get("detalle", ""),
+            "suggestions": i.get("sugerencias", ""),
+            # Hacemos lo mismo para las opciones de sugerencias de los objetivos específicos
+            "suggestion_options": (
+                i.get("opciones_de_sugerencias") or
+                i.get("opciones_de_reescritura") or
+                i.get("opciones_de_escritura") or
+                i.get("opciones_global") or
+                []
+            )
+        }
+        individual_evaluation["specific_objectives"].append(specific_objective)
     
     return joint_evaluation, individual_evaluation
 
